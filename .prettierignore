@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+build/
+
+# Environment files
+.env*
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# Misc
+.DS_Store
