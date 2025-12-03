@@ -1,9 +1,5 @@
-# Dockerfile for Turbo monorepo apps
+# Dockerfile for Next.js application
 FROM node:22-alpine AS base
-
-# Build arguments for app selection
-ARG APP_NAME=chatbot
-ARG PORT=3000
 
 # Install pnpm
 RUN npm install -g pnpm@10.16.1
@@ -13,33 +9,28 @@ WORKDIR /app
 
 # Install dependencies only when needed
 FROM base AS deps
-ARG APP_NAME
 
-# Copy workspace configuration
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
-# Copy all apps package.json for workspace resolution
-COPY apps/${APP_NAME}/package.json ./apps/${APP_NAME}/package.json
-
-# Copy all packages package.json
-COPY packages ./packages
-
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Build the application
 FROM base AS builder
-ARG APP_NAME
 WORKDIR /app
+
+# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy application files
 COPY . .
 
-# Build the specified app
-RUN pnpm turbo build --filter=@apps/${APP_NAME}
+# Build the Next.js application
+RUN pnpm build
 
 # Production image
 FROM base AS runner
-ARG APP_NAME
-ARG PORT
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -48,28 +39,22 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy workspace configuration
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=builder /app/turbo.json ./turbo.json
+# Copy necessary files
+COPY --from=builder /app/next.config.ts ./
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/public ./public
 
-# Copy necessary files for the app
-COPY --from=builder /app/apps/${APP_NAME}/next.config.* ./apps/${APP_NAME}/
-COPY --from=builder /app/apps/${APP_NAME}/package.json ./apps/${APP_NAME}/
-COPY --from=builder /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/.next ./apps/${APP_NAME}/.next
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 
 # Copy dependencies
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy packages source files (needed for transpilePackages)
-COPY --from=builder /app/packages ./packages
-
 USER nextjs
 
-EXPOSE ${PORT}
+EXPOSE 3000
 
-ENV PORT=${PORT}
+ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD pnpm --filter=@apps/${APP_NAME} start
+CMD ["pnpm", "start"]

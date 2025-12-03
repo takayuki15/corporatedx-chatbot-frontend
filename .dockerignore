@@ -32,9 +32,6 @@ lerna-debug.log*
 .env*.local
 .env
 
-# Turbo
-.turbo
-
 # IDEs
 .vscode
 .idea
