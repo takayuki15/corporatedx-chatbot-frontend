@@ -1,4 +1,5 @@
 import type { RagRequest, RagResponse } from '@/lib/api';
+import { saveChatHistory, loadChatHistory, deleteChatHistory } from '@/lib/storage';
 import { useCallback, useState } from 'react';
 
 /**
@@ -64,13 +65,18 @@ export function useRagChat() {
 
         const data: RagResponse = await response.json();
 
-        setState(prev => ({
-          messages: [...prev.messages, data],
+        const updatedMessages = [...state.messages, data];
+
+        setState({
+          messages: updatedMessages,
           loading: false,
           error: null,
           sessionId: data.session_id,
           lastUserMessage: null,
-        }));
+        });
+
+        // localStorageに保存
+        saveChatHistory(data.session_id, updatedMessages);
 
         return data;
       } catch (error) {
@@ -87,13 +93,18 @@ export function useRagChat() {
         throw error;
       }
     },
-    [state.sessionId]
+    [state.sessionId, state.messages]
   );
 
   /**
    * チャット履歴をクリア
    */
   const clearMessages = useCallback(() => {
+    // localStorageから削除
+    if (state.sessionId) {
+      deleteChatHistory(state.sessionId);
+    }
+
     setState({
       messages: [],
       loading: false,
@@ -101,7 +112,7 @@ export function useRagChat() {
       sessionId: null,
       lastUserMessage: null,
     });
-  }, []);
+  }, [state.sessionId]);
 
   /**
    * エラーをクリア
@@ -117,10 +128,27 @@ export function useRagChat() {
    * セッションIDをリセット（新しい会話を開始）
    */
   const resetSession = useCallback(() => {
-    setState(prev => ({
-      ...prev,
+    setState({
+      messages: [],
+      loading: false,
+      error: null,
       sessionId: null,
-    }));
+      lastUserMessage: null,
+    });
+  }, []);
+
+  /**
+   * 指定したセッションを読み込む
+   */
+  const loadSession = useCallback((sessionId: string) => {
+    const savedMessages = loadChatHistory(sessionId);
+    setState({
+      messages: savedMessages,
+      loading: false,
+      error: null,
+      sessionId: sessionId,
+      lastUserMessage: null,
+    });
   }, []);
 
   return {
@@ -133,5 +161,6 @@ export function useRagChat() {
     clearMessages,
     clearError,
     resetSession,
+    loadSession,
   };
 }

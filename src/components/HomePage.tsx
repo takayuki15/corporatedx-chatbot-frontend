@@ -15,7 +15,7 @@ export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // RAGチャット機能を使用
-  const { messages, loading, error, lastUserMessage, sendMessage } = useRagChat();
+  const { messages, loading, error, lastUserMessage, sendMessage, resetSession, loadSession } = useRagChat();
 
   const handleChatSend = async (
     text: string,
@@ -36,6 +36,16 @@ export default function HomePage() {
     }
   };
 
+  // セッション選択時の処理
+  const handleSelectSession = (sessionId: string) => {
+    loadSession(sessionId);
+  };
+
+  // 新しいチャット開始時の処理
+  const handleNewChat = () => {
+    resetSession();
+  };
+
   // メッセージがある場合とない場合でレイアウトを切り替え
   const hasMessages = messages.length > 0;
 
@@ -46,7 +56,12 @@ export default function HomePage() {
 
       <Box sx={{ display: 'flex', height: '100vh' }}>
         {/* 既存のSidebarコンポーネントを使用 */}
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onSelectSession={handleSelectSession}
+          onNewChat={handleNewChat}
+        />
 
         {/* メインコンテンツ */}
         <Box

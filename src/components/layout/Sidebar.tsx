@@ -1,6 +1,7 @@
 'use client';
 
 import { useUserContext } from '@/contexts';
+import { getAllSessionIds, loadChatHistory } from '@/lib/storage';
 import {
   Create as CreateIcon,
   ExpandMore as ExpandMoreIcon,
@@ -21,23 +22,53 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { BsLayoutSidebar } from 'react-icons/bs';
 
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  onSelectSession?: (sessionId: string) => void;
+  onNewChat?: () => void;
 }
 
-const chatHistory = [
-  'Next.jsプロジェクトについて',
-  'MUIコンポーネントの使い方',
-  'TypeScriptの型定義',
-  'Reactのベストプラクティス',
-  'デザインシステムの構築',
-];
+interface ChatHistoryItem {
+  sessionId: string;
+  title: string;
+  lastUpdate: Date;
+}
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+export default function Sidebar({ open, onClose, onSelectSession, onNewChat }: SidebarProps) {
   const { user, loading } = useUserContext();
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
+
+  // localStorageからチャット履歴を読み込み
+  useEffect(() => {
+    if (!open) return; // サイドバーが閉じている場合は読み込まない
+
+    const sessionIds = getAllSessionIds();
+    const historyItems: ChatHistoryItem[] = sessionIds
+      .map(sessionId => {
+        const messages = loadChatHistory(sessionId);
+        if (messages.length === 0) return null;
+
+        // 最初のユーザーメッセージをタイトルとして使用
+        const firstUserMessage = messages[0]?.chat_history?.find(
+          msg => msg.role === 'user'
+        );
+        const title = firstUserMessage?.content || 'タイトルなし';
+
+        return {
+          sessionId,
+          title: title.length > 30 ? title.substring(0, 30) + '...' : title,
+          lastUpdate: new Date(), // TODO: 実際のタイムスタンプを使用
+        };
+      })
+      .filter((item): item is ChatHistoryItem => item !== null)
+      .sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime()); // 新しい順
+
+    setChatHistory(historyItems);
+  }, [open]); // サイドバーが開くたびに再読み込み
 
   // nameからスラッシュ以降の日本語名を抽出
   const displayName = user?.name?.includes('/')
@@ -103,6 +134,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             variant="contained"
             fullWidth
             startIcon={<CreateIcon />}
+            onClick={onNewChat}
             sx={{
               justifyContent: 'center',
               borderRadius: 2,
@@ -122,31 +154,40 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Chat History */}
         <Box sx={{ flex: 1, overflow: 'auto' }}>
           <List sx={{ px: 1 }}>
-            {chatHistory.map((chat, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton
-                  sx={{
-                    borderRadius: 2,
-                    mx: 1,
-                    mb: 0.5,
-                    '&:hover': {
-                      bgcolor: 'primary.50',
-                    },
-                  }}
-                >
-                  <ListItemText
-                    primary={chat}
-                    slotProps={{
-                      primary: {
-                        variant: 'body2',
-                        noWrap: true,
-                        sx: { color: 'text.primary' },
+            {chatHistory.length === 0 ? (
+              <Box sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  チャット履歴がありません
+                </Typography>
+              </Box>
+            ) : (
+              chatHistory.map((chat) => (
+                <ListItem key={chat.sessionId} disablePadding>
+                  <ListItemButton
+                    onClick={() => onSelectSession?.(chat.sessionId)}
+                    sx={{
+                      borderRadius: 2,
+                      mx: 1,
+                      mb: 0.5,
+                      '&:hover': {
+                        bgcolor: 'primary.50',
                       },
                     }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
+                  >
+                    <ListItemText
+                      primary={chat.title}
+                      slotProps={{
+                        primary: {
+                          variant: 'body2',
+                          noWrap: true,
+                          sx: { color: 'text.primary' },
+                        },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))
+            )}
           </List>
         </Box>
 
