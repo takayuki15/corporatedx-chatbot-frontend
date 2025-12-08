@@ -37,9 +37,9 @@ export function UserProvider({ children }: UserProviderProps) {
       setLoading(true);
       setError(null);
 
-      // /chatbot/api/me エンドポイントを呼び出し
+      // /chatbot/api/me/ エンドポイントを呼び出し
       // このエンドポイントがALBヘッダーから情報を取得する
-      const response = await fetch('/chatbot/api/me');
+      const response = await fetch('/chatbot/api/me/');
 
       if (!response.ok) {
         const errorData = await response.json();

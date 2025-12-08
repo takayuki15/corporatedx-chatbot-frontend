@@ -1,0 +1,6 @@
+{
+  "statusCode": 404,
+  "body": {
+    "error": "FAQ、RAGともに検索結果が見つかりませんでした。"
+  }
+}

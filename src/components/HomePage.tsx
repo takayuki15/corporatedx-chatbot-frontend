@@ -4,26 +4,40 @@ import { Box, Container, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { BsLayoutSidebar } from 'react-icons/bs';
 
+import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
-import Sidebar from '@/components/layout/Sidebar';
-import QuickActions from '@/components/QuickActions';
 import TermsModal from '@/components/common/TermsModal';
+import Sidebar from '@/components/layout/Sidebar';
+import { useRagChat } from '@/hooks';
 
 export default function HomePage() {
   const [chatInputValue, setChatInputValue] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleChatSend = (
+  // RAGチャット機能を使用
+  const { messages, loading, error, lastUserMessage, sendMessage } = useRagChat();
+
+  const handleChatSend = async (
     text: string,
     options: { confidential: boolean; files: File[] }
   ) => {
-    // eslint-disable-next-line no-console
-    console.log('Chat message sent:', { text, options });
+    try {
+      // TODO: confidentialフラグとfilesをバックエンドに送信する処理を追加
+      console.log('Chat options:', {
+        confidential: options.confidential,
+        filesCount: options.files.length,
+      });
+
+      await sendMessage(text);
+      setChatInputValue('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // エラーは useRagChat で管理されるため、ここでは追加処理不要
+    }
   };
 
-  const handleQuickActionSelect = (text: string) => {
-    setChatInputValue(text);
-  };
+  // メッセージがある場合とない場合でレイアウトを切り替え
+  const hasMessages = messages.length > 0;
 
   return (
     <Container maxWidth="lg">
@@ -83,37 +97,80 @@ export default function HomePage() {
               flexGrow: 1,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              px: 4,
-              pt: 8,
+              ...(hasMessages
+                ? {
+                    // メッセージがある場合: チャット履歴を上部に表示
+                    justifyContent: 'flex-start',
+                    pt: 2,
+                  }
+                : {
+                    // メッセージがない場合: 中央に配置
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    px: 4,
+                    pt: 8,
+                  }),
               pb: 4,
-              overflow: 'auto',
+              overflow: 'hidden',
             }}
           >
-            <Box
-              sx={{
-                maxWidth: 900,
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                mt: 6,
-              }}
-            >
-              <QuickActions onActionSelect={handleQuickActionSelect} />
-
-              {/* チャット入力エリア（クイックアクションのすぐ下） */}
-              <Box sx={{ width: '100%', maxWidth: 800 }}>
-                <ChatInput
-                  onSend={handleChatSend}
-                  value={chatInputValue}
-                  onChange={setChatInputValue}
+            {hasMessages ? (
+              // チャット履歴表示モード
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  maxWidth: 900,
+                  width: '100%',
+                  mx: 'auto',
+                }}
+              >
+                <ChatHistory
+                  messages={messages}
+                  loading={loading}
+                  error={error}
+                  lastUserMessage={lastUserMessage}
                 />
+
+                {/* チャット入力エリア（下部固定） */}
+                <Box sx={{ px: 3, pb: 2 }}>
+                  <ChatInput
+                    onSend={handleChatSend}
+                    value={chatInputValue}
+                    onChange={setChatInputValue}
+                    disabled={loading}
+                    loading={loading}
+                  />
+                </Box>
               </Box>
-            </Box>
+            ) : (
+              // 初期表示モード（クイックアクション + 入力エリア）
+              <Box
+                sx={{
+                  maxWidth: 900,
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  mt: 6,
+                }}
+              >
+                {/* チャット入力エリア（クイックアクションのすぐ下） */}
+                <Box sx={{ width: '100%', maxWidth: 800 }}>
+                  <ChatInput
+                    onSend={handleChatSend}
+                    value={chatInputValue}
+                    onChange={setChatInputValue}
+                    disabled={loading}
+                    loading={loading}
+                  />
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
