@@ -39,6 +39,16 @@ const chatHistory = [
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const { user, loading } = useUserContext();
 
+  // nameからスラッシュ以降の日本語名を抽出
+  const displayName = user?.name?.includes('/')
+    ? user.name.split('/')[1]
+    : user?.name || '不明';
+
+  // unique_nameから@以前の文字列を抽出
+  const displayUniqueName = user?.unique_name?.includes('@')
+    ? user.unique_name.split('@')[0]
+    : user?.unique_name || '不明';
+
   return (
     <Drawer
       variant="persistent"
@@ -160,8 +170,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               )}
             </Avatar>
             <ListItemText
-              primary={user?.name || '不明'}
-              secondary={user?.unique_name || '不明'}
+              primary={displayName}
+              secondary={displayUniqueName}
               slotProps={{
                 primary: {
                   variant: 'body2',
