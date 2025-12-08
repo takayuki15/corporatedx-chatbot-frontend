@@ -6,9 +6,11 @@ import { BsLayoutSidebar } from 'react-icons/bs';
 
 import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
+import ChatHeader from '@/components/chat/ChatHeader';
 import TermsModal from '@/components/common/TermsModal';
 import Sidebar from '@/components/layout/Sidebar';
 import { useRagChat } from '@/hooks';
+import { deleteChatHistory } from '@/lib/storage';
 
 export default function HomePage() {
   const [chatInputValue, setChatInputValue] = useState('');
@@ -44,6 +46,34 @@ export default function HomePage() {
   // 新しいチャット開始時の処理
   const handleNewChat = () => {
     resetSession();
+  };
+
+  // チャット削除時の処理
+  const handleDeleteChat = () => {
+    if (confirm('このチャットを削除しますか？')) {
+      const currentSessionId = messages[0]?.session_id;
+      if (currentSessionId) {
+        deleteChatHistory(currentSessionId);
+      }
+      resetSession();
+    }
+  };
+
+  // 有人窓口ボタンクリック時の処理
+  const handleSupport = () => {
+    // TODO: 有人窓口への遷移処理を実装
+    console.log('有人窓口へ遷移');
+  };
+
+  // チャットタイトルを取得（初回ユーザー入力の先頭15文字）
+  const getChatTitle = () => {
+    if (messages.length === 0) return '新しいチャット';
+
+    const firstUserMessage = messages[0]?.chat_history?.find(
+      msg => msg.role === 'user'
+    );
+    const title = firstUserMessage?.content || '新しいチャット';
+    return title.length > 15 ? title.substring(0, 15) + '...' : title;
   };
 
   // メッセージがある場合とない場合でレイアウトを切り替え
@@ -106,6 +136,15 @@ export default function HomePage() {
             </Box>
           )}
 
+          {/* ヘッダー（メッセージがある場合のみ表示） */}
+          {hasMessages && (
+            <ChatHeader
+              title={getChatTitle()}
+              onDelete={handleDeleteChat}
+              onSupport={handleSupport}
+            />
+          )}
+
           {/* メインエリア */}
           <Box
             sx={{
@@ -116,7 +155,6 @@ export default function HomePage() {
                 ? {
                     // メッセージがある場合: チャット履歴を上部に表示
                     justifyContent: 'flex-start',
-                    pt: 2,
                   }
                 : {
                     // メッセージがない場合: 中央に配置
