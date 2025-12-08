@@ -2,8 +2,8 @@
 
 import RelatedFAQ from '@/components/common/RelatedFAQ';
 import type { RagResponse } from '@/lib/api';
-import { Box, Paper, Typography, IconButton } from '@mui/material';
-import { ThumbUpOutlined, ThumbDownOutlined } from '@mui/icons-material';
+import { ThumbDownOutlined, ThumbUpOutlined } from '@mui/icons-material';
+import { Box, IconButton, Paper, Typography } from '@mui/material';
 import type { Citation } from './CitationPopover';
 import CitationText from './CitationText';
 
@@ -52,7 +52,7 @@ function RagAnswerWithCitations({
         const citation: Citation = {
           id: `rag-citation-${citationIndex}`,
           title: ragSourceFiles[citationIndex],
-          url: '#', // 実際のURLがある場合はここに設定
+          file_name: ragSourceFiles[citationIndex],
           description: ragSourceTexts?.[citationIndex] || undefined,
         };
 
@@ -150,6 +150,12 @@ export default function ChatMessage({ response }: ChatMessageProps) {
     .filter(msg => msg.role === 'user')
     .pop();
 
+  // 投稿時間を現在時刻で表示（TODO: メッセージごとのタイムスタンプを追加）
+  const timestamp = new Date().toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
   // パターン1: インデックス不在
   const isNoIndexAvailable =
     'no_index_available' in response && response.no_index_available;
@@ -167,7 +173,14 @@ export default function ChatMessage({ response }: ChatMessageProps) {
     <Box sx={{ mb: 4 }}>
       {/* ユーザーメッセージ */}
       {lastUserMessage && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            mb: 2,
+          }}
+        >
           <Paper
             elevation={1}
             sx={{
@@ -180,6 +193,12 @@ export default function ChatMessage({ response }: ChatMessageProps) {
           >
             <Typography variant="body1">{lastUserMessage.content}</Typography>
           </Paper>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary', mt: 0.5 }}
+          >
+            {timestamp}
+          </Typography>
         </Box>
       )}
 

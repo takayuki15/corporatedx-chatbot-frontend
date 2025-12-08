@@ -67,7 +67,7 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
       {loading && lastUserMessage && (
         <Box sx={{ mb: 4 }}>
           {/* ユーザーメッセージ */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mb: 2 }}>
             <Paper
               elevation={1}
               sx={{
@@ -80,6 +80,12 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
             >
               <Typography variant="body1">{lastUserMessage}</Typography>
             </Paper>
+            <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+              {new Date().toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Typography>
           </Box>
 
           {/* AIレスポンスのスケルトン */}
