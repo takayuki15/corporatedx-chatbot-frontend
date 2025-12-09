@@ -1,13 +1,13 @@
 'use client';
 
 import { Box, IconButton } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BsLayoutSidebar } from 'react-icons/bs';
 
 import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
 import ChatHeader from '@/components/chat/ChatHeader';
-import TermsModal from '@/components/common/TermsModal';
+import TermsMessage from '@/components/chat/TermsMessage';
 import Sidebar from '@/components/layout/Sidebar';
 import SupportSidebar from '@/components/layout/SupportSidebar';
 import { useRagChat } from '@/hooks';
@@ -17,9 +17,16 @@ export default function HomePage() {
   const [chatInputValue, setChatInputValue] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [supportSidebarOpen, setSupportSidebarOpen] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // RAGチャット機能を使用
   const { messages, loading, error, lastUserMessage, sendMessage, resetSession, loadSession } = useRagChat();
+
+  // 利用規約の同意状態をチェック
+  useEffect(() => {
+    const termsConsent = sessionStorage.getItem('termsConsent');
+    setTermsAccepted(termsConsent === 'accepted');
+  }, []);
 
   const handleChatSend = async (
     text: string,
@@ -48,6 +55,9 @@ export default function HomePage() {
   // 新しいチャット開始時の処理
   const handleNewChat = () => {
     resetSession();
+    // 新しいチャット開始時に利用規約を再表示
+    sessionStorage.removeItem('termsConsent');
+    setTermsAccepted(false);
   };
 
   // チャット削除時の処理
@@ -66,6 +76,16 @@ export default function HomePage() {
     setSupportSidebarOpen(true);
   };
 
+  // 利用規約同意状態変更ハンドラー
+  const handleTermsAgreeChange = (agreed: boolean) => {
+    if (agreed) {
+      sessionStorage.setItem('termsConsent', 'accepted');
+    } else {
+      sessionStorage.removeItem('termsConsent');
+    }
+    setTermsAccepted(agreed);
+  };
+
   // チャットタイトルを取得（初回ユーザー入力の先頭15文字）
   const getChatTitle = () => {
     if (messages.length === 0) return '新しいチャット';
@@ -82,9 +102,6 @@ export default function HomePage() {
 
   return (
     <>
-      {/* 利用規約モーダル */}
-      <TermsModal />
-
       <Box sx={{ display: 'flex', height: '100vh' }}>
         {/* 既存のSidebarコンポーネントを使用 */}
         <Sidebar
@@ -207,7 +224,7 @@ export default function HomePage() {
                 </Box>
               </Box>
             ) : (
-              // 初期表示モード（クイックアクション + 入力エリア）
+              // 初期表示モード
               <Box
                 sx={{
                   maxWidth: 900,
@@ -215,18 +232,21 @@ export default function HomePage() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-start',
                   gap: 4,
                   mt: 6,
                 }}
               >
-                {/* チャット入力エリア（クイックアクションのすぐ下） */}
-                <Box sx={{ width: '100%', maxWidth: 800 }}>
+                {/* 利用規約 */}
+                <TermsMessage onAgreeChange={handleTermsAgreeChange} />
+
+                {/* チャット入力エリア（常に表示、同意状態で有効/無効を切り替え） */}
+                <Box sx={{ width: '100%', maxWidth: 800, px: 3 }}>
                   <ChatInput
                     onSend={handleChatSend}
                     value={chatInputValue}
                     onChange={setChatInputValue}
-                    disabled={loading}
+                    disabled={!termsAccepted || loading}
                     loading={loading}
                   />
                 </Box>
