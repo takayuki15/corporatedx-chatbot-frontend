@@ -111,12 +111,46 @@ export interface RagRequest {
 }
 
 /**
+ * 有人窓口情報
+ */
+export interface MannedCounterInfo {
+  business_sub_category: string;
+  manned_counter_name?: string;
+  manned_counter_email?: string;
+  manned_counter_description?: string;
+  is_office_access_only?: boolean;
+}
+
+/**
+ * FAQ結果オブジェクト（v1.1.0: ネスト構造）
+ */
+export interface FaqResult {
+  answer: string[];
+  source_files: string[];
+  chunk_ids: string[];
+  source_texts: string[];
+  metadata_list: string[];
+}
+
+/**
+ * RAG結果オブジェクト（v1.1.0: ネスト構造）
+ */
+export interface RagResult {
+  answer: string;
+  source_files: string[];
+  chunk_ids: string[];
+  source_texts: string[];
+  metadata_list: string[];
+}
+
+/**
  * RAGレスポンスの共通フィールド
  */
 interface RagResponseBase {
   session_id: string;
   chat_history: ChatMessage[];
   business_sub_categories: string[];
+  manned_counter_info: MannedCounterInfo[];
 }
 
 /**
@@ -131,38 +165,22 @@ export interface NoIndexAvailableResponse extends RagResponseBase {
  * パターン2: FAQ回答のみのレスポンス
  */
 export interface FaqOnlyResponse extends RagResponseBase {
-  faq_answer: string[];
-  faq_source_files: string[];
-  faq_chunk_ids: string[];
-  faq_source_texts: string[];
-  faq_metadata_list: string[];
+  faq: FaqResult;
 }
 
 /**
  * パターン3: RAG回答のみのレスポンス
  */
 export interface RagOnlyResponse extends RagResponseBase {
-  rag_answer: string;
-  rag_source_files: string[];
-  rag_chunk_ids: string[];
-  rag_source_texts: string[];
-  rag_metadata_list: string[];
+  rag: RagResult;
 }
 
 /**
  * パターン4: FAQ + RAG両方のレスポンス
  */
 export interface FaqAndRagResponse extends RagResponseBase {
-  faq_answer: string[];
-  faq_source_files: string[];
-  faq_chunk_ids: string[];
-  faq_source_texts: string[];
-  faq_metadata_list: string[];
-  rag_answer: string;
-  rag_source_files: string[];
-  rag_chunk_ids: string[];
-  rag_source_texts: string[];
-  rag_metadata_list: string[];
+  faq: FaqResult;
+  rag: RagResult;
 }
 
 /**
@@ -173,3 +191,11 @@ export type RagResponse =
   | FaqOnlyResponse
   | RagOnlyResponse
   | FaqAndRagResponse;
+
+/**
+ * バックエンドAPIの生レスポンス（bodyがJSON文字列の場合）
+ */
+export interface RagApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列
+}

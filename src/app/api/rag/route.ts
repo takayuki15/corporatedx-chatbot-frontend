@@ -1,4 +1,9 @@
-import type { ErrorResponse, RagRequest, RagResponse } from '@/lib/api';
+import type {
+  ErrorResponse,
+  RagApiResponse,
+  RagRequest,
+  RagResponse,
+} from '@/lib/api';
 import { apiClient } from '@/lib/api';
 import { useMockApi } from '@/lib/config';
 import { readFileSync } from 'fs';
@@ -9,7 +14,7 @@ import { join } from 'path';
  * POST /api/rag
  * RAG自動回答システムAPI
  * - モックモード: mocks/ragFaqAndRag.json からレスポンスを取得
- * - 本番モード: バックエンドAPI /v1/rag にリクエストを送信
+ * - 本番モード: バックエンドAPI /v1/automated_answer にリクエストを送信
  *
  * リクエストボディ:
  * {
@@ -144,9 +149,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 本番モードの場合
-    const response = await apiClient.post<RagResponse>('/v1/rag', body);
+    const response = await apiClient.post<RagApiResponse>(
+      '/v1/automated_answer',
+      body
+    );
 
-    return NextResponse.json(response, { status: 200 });
+    // bodyをパースして {"statusCode": 200, "body": {...}} から body の中身を取得
+    const parsedBody: RagResponse =
+      typeof response.body === 'string'
+        ? JSON.parse(response.body)
+        : response.body;
+
+    return NextResponse.json(parsedBody, { status: 200 });
   } catch (error) {
     console.error('Error in RAG API:', error);
     console.error('Error details:', {

@@ -161,13 +161,13 @@ export default function ChatMessage({ response }: ChatMessageProps) {
     'no_index_available' in response && response.no_index_available;
 
   // パターン2: 関連FAQのみ
-  const hasFaqOnly = 'faq_answer' in response && !('rag_answer' in response);
+  const hasFaqOnly = 'faq' in response && !('rag' in response);
 
   // パターン3: RAG回答のみ
-  const hasRagOnly = 'rag_answer' in response && !('faq_answer' in response);
+  const hasRagOnly = 'rag' in response && !('faq' in response);
 
   // パターン4: FAQ + RAG両方
-  const hasBoth = 'faq_answer' in response && 'rag_answer' in response;
+  const hasBoth = 'faq' in response && 'rag' in response;
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -221,36 +221,36 @@ export default function ChatMessage({ response }: ChatMessageProps) {
           )}
 
           {/* パターン2: 関連FAQのみ */}
-          {hasFaqOnly && 'faq_answer' in response && (
+          {hasFaqOnly && 'faq' in response && (
             <RelatedFAQ
-              faqAnswers={response.faq_answer}
-              faqSourceTexts={response.faq_source_texts}
-              faqSourceFiles={response.faq_source_files}
+              faqAnswers={response.faq.answer}
+              faqSourceTexts={response.faq.source_texts}
+              faqSourceFiles={response.faq.source_files}
               title="関連FAQ"
             />
           )}
 
           {/* パターン3: RAG回答のみ */}
-          {hasRagOnly && 'rag_answer' in response && (
+          {hasRagOnly && 'rag' in response && (
             <Box>
               <RagAnswerWithCitations
-                ragAnswer={response.rag_answer}
-                ragSourceFiles={response.rag_source_files}
-                ragSourceTexts={response.rag_source_texts}
+                ragAnswer={response.rag.answer}
+                ragSourceFiles={response.rag.source_files}
+                ragSourceTexts={response.rag.source_texts}
               />
               <FeedbackButtons />
             </Box>
           )}
 
           {/* パターン4: FAQ + RAG両方 */}
-          {hasBoth && 'faq_answer' in response && 'rag_answer' in response && (
+          {hasBoth && 'faq' in response && 'rag' in response && (
             <Box>
               {/* 関連FAQ */}
               <Box sx={{ mb: 3 }}>
                 <RelatedFAQ
-                  faqAnswers={response.faq_answer}
-                  faqSourceTexts={response.faq_source_texts}
-                  faqSourceFiles={response.faq_source_files}
+                  faqAnswers={response.faq.answer}
+                  faqSourceTexts={response.faq.source_texts}
+                  faqSourceFiles={response.faq.source_files}
                   title="関連FAQ"
                 />
               </Box>
@@ -258,9 +258,9 @@ export default function ChatMessage({ response }: ChatMessageProps) {
               {/* RAG回答 */}
               <Box>
                 <RagAnswerWithCitations
-                  ragAnswer={response.rag_answer}
-                  ragSourceFiles={response.rag_source_files}
-                  ragSourceTexts={response.rag_source_texts}
+                  ragAnswer={response.rag.answer}
+                  ragSourceFiles={response.rag.source_files}
+                  ragSourceTexts={response.rag.source_texts}
                 />
                 <FeedbackButtons />
               </Box>

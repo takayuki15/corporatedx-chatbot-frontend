@@ -9,55 +9,63 @@
       },
       {
         "role": "assistant",
-        "content": "経費精算の期限は毎月末日です。"
+        "content": "経費精算は、会社規程に基づき毎月末日までに提出する必要があります。交通費については翌月10日までの提出が認められています。必ず領収書の原本を添付してください。詳細は経理部門にお問い合わせください。"
       }
     ],
     "business_sub_categories": ["経理", "総務"],
-    "faq_answer": [
-      "経費精算の期限は毎月末日です。",
-      "交通費の精算は翌月10日までです。",
-      "領収書は必ず原本を提出してください。"
+    "manned_counter_info": [
+      {
+        "business_sub_category": "経理",
+        "manned_counter_name": "経理窓口",
+        "manned_counter_email": "keiri@example.com",
+        "manned_counter_description": "経費精算・給与に関するお問い合わせ",
+        "is_office_access_only": false
+      },
+      {
+        "business_sub_category": "総務",
+        "manned_counter_name": "総務課",
+        "manned_counter_email": "soumu@example.com",
+        "manned_counter_description": "総務全般に関するお問い合わせ",
+        "is_office_access_only": false
+      }
     ],
-    "faq_source_files": [
-      "FAQ-001.md",
-      "FAQ-002.md",
-      "FAQ-003.md"
-    ],
-    "faq_chunk_ids": [
-      "faq_001",
-      "faq_002",
-      "faq_003"
-    ],
-    "faq_source_texts": [
-      "Q: 経費精算の期限は？\nA: 経費精算の期限は毎月末日です。",
-      "Q: 交通費精算は？\nA: 交通費の精算は翌月10日までです。",
-      "Q: 領収書について\nA: 領収書は必ず原本を提出してください。"
-    ],
-    "faq_metadata_list": [
-      "{\"business_sub_category\": \"経理\", \"office_codes\": [\"MM00\"]}",
-      "{\"business_sub_category\": \"経理\", \"office_codes\": [\"all\"]}",
-      "{\"business_sub_category\": \"総務\", \"office_codes\": [\"MM00\"]}"
-    ],
-    "rag_answer": "経費精算は、会社規程に基づき毎月末日までに提出する必要があります[1]。交通費については翌月10日までの提出が認められています[2]。必ず領収書の原本を添付してください。詳細は経理部門にお問い合わせください[3]。",
-    "rag_source_files": [
-      "company_rules.pdf",
-      "expense_guide.docx",
-      "faq_detail.pdf"
-    ],
-    "rag_chunk_ids": [
-      "rag_101",
-      "rag_102",
-      "rag_103"
-    ],
-    "rag_source_texts": [
-      "第3章 経費精算\n3.1 精算期限\n経費精算は毎月末日までに提出する必要があります...",
-      "交通費精算について\n交通費の精算は翌月10日までに提出してください...",
-      "経理部問い合わせ先\n経理部: keiri@example.com\n内線: 2345"
-    ],
-    "rag_metadata_list": [
-      "{\"business_sub_category\": \"経理\", \"document_type\": \"規程\"}",
-      "{\"business_sub_category\": \"総務\", \"document_type\": \"ガイド\"}",
-      "{\"business_sub_category\": \"経理\", \"document_type\": \"ポリシー\"}"
-    ]
+    "faq": {
+      "answer": [
+        "経費精算の期限は毎月末日です。",
+        "交通費の精算は翌月10日までです。",
+        "領収書は必ず原本を提出してください。"
+      ],
+      "source_files": ["FAQ-001.md", "FAQ-002.md", "FAQ-003.md"],
+      "chunk_ids": ["faq_001", "faq_002", "faq_003"],
+      "source_texts": [
+        "Q: 経費精算の期限は？\nA: 経費精算の期限は毎月末日です。",
+        "Q: 交通費精算は？\nA: 交通費の精算は翌月10日までです。",
+        "Q: 領収書について\nA: 領収書は必ず原本を提出してください。"
+      ],
+      "metadata_list": [
+        "{\"business_sub_category\": \"経理\", \"office_codes\": [\"MM00\"]}",
+        "{\"business_sub_category\": \"経理\", \"office_codes\": [\"all\"]}",
+        "{\"business_sub_category\": \"総務\", \"office_codes\": [\"MM00\"]}"
+      ]
+    },
+    "rag": {
+      "answer": "経費精算は、会社規程に基づき毎月末日までに提出する必要があります[1]。交通費については翌月10日までの提出が認められています[2]。必ず領収書の原本を添付してください。詳細は経理部門にお問い合わせください[3]。",
+      "source_files": [
+        "company_rules.pdf",
+        "expense_guide.docx",
+        "faq_detail.pdf"
+      ],
+      "chunk_ids": ["rag_101", "rag_102", "rag_103"],
+      "source_texts": [
+        "第3章 経費精算\n3.1 精算期限\n経費精算は毎月末日までに提出する必要があります...",
+        "交通費精算について\n交通費の精算は翌月10日までに提出してください...",
+        "経理部問い合わせ先\n経理部: keiri@example.com\n内線: 2345"
+      ],
+      "metadata_list": [
+        "{\"business_sub_category\": \"経理\", \"document_type\": \"規程\"}",
+        "{\"business_sub_category\": \"総務\", \"document_type\": \"ガイド\"}",
+        "{\"business_sub_category\": \"経理\", \"document_type\": \"ポリシー\"}"
+      ]
+    }
   }
 }

@@ -4,7 +4,7 @@
 
 `src/automated_answer/handler.py` の Lambda関数は、業務小分類を自動識別し、FAQ/RAGドキュメントから適切な回答を生成する無人回答システムです。
 
-**エンドポイント:** `/v1/rag` (POST)
+**エンドポイント:** `/v1/automated_answer` (POST)
 
 ---
 
@@ -38,19 +38,22 @@
 
 #### オプションパラメータ
 
-| パラメータ           | 型        | デフォルト値           | 説明                               | 制約                                         |
-| -------------------- | --------- | ---------------------- | ---------------------------------- | -------------------------------------------- |
-| `session_id`         | `string?` | 自動生成               | セッション識別子（会話履歴管理用） | UUIDv4形式                                   |
-| `model_name`         | `string`  | `"gpt-4.1-mini"`       | 使用するLLMモデル                  | Azure OpenAIモデル名                         |
-| `language`           | `string`  | `"default"`            | 入力言語                           | ISO639-1 (`"ja"`, `"en"`) または `"default"` |
-| `retrieval_mode`     | `string`  | `"hybrid"`             | 検索モード                         | `"hybrid"` / `"bm25"` / `"cos_sim"`          |
-| `top_n`              | `integer` | `5`                    | 返却するドキュメント数             | 1～100                                       |
-| `rrf_k`              | `integer` | `5`                    | RRFパラメータ                      | 1以上                                        |
-| `is_query_expansion` | `boolean` | `true`                 | クエリ拡張を使用するか             | -                                            |
-| `rerank_model_type`  | `string`  | `"aoai"`               | リランキングモデルタイプ           | `"aoai"` / `"bedrock"`                       |
-| `bedrock_model_name` | `string`  | `"amazon.rerank-v1:0"` | Bedrockモデル名                    | -                                            |
-| `system_message`     | `string?` | `null`                 | カスタムシステムメッセージ         | 「質問」「ソース」を含む必要あり             |
-| `llm_params`         | `object`  | 下記参照               | LLMパラメータ                      | -                                            |
+| パラメータ       | 型        | デフォルト値     | 説明                               | 制約                                         |
+| ---------------- | --------- | ---------------- | ---------------------------------- | -------------------------------------------- |
+| `session_id`     | `string?` | 自動生成         | セッション識別子（会話履歴管理用） | UUIDv4形式                                   |
+| `model_name`     | `string`  | `"gpt-4.1-mini"` | 使用するLLMモデル                  | Azure OpenAIモデル名                         |
+| `language`       | `string`  | `"default"`      | 入力言語                           | ISO639-1 (`"ja"`, `"en"`) または `"default"` |
+| `retrieval_mode` | `string`  | `"hybrid"`       | 検索モード                         | `"hybrid"` / `"bm25"` / `"cos_sim"`          |
+| `top_n`          | `integer` | `5`              | 返却するドキュメント数             | 1～100                                       |
+| `system_message` | `string?` | `null`           | カスタムシステムメッセージ         | 「質問」「ソース」を含む必要あり             |
+| `llm_params`     | `object`  | 下記参照         | LLMパラメータ                      | -                                            |
+
+**注意:** 以下のパラメータは現在実装で固定値として設定されており、リクエストパラメータとして指定しても無視されます:
+
+- `rrf_k`: 固定値 `5`
+- `is_query_expansion`: 固定値 `false`
+- `rerank_model_type`: 固定値 `"aoai"`
+- `bedrock_model_name`: 固定値 `"amazon.rerank-v1:0"`
 
 #### LLMパラメータ (`llm_params`)
 
@@ -132,15 +135,31 @@
 
 ### curlコマンド例
 
+#### 基本的なリクエスト（最小構成）
+
 ```bash
-curl -v "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag" \
-  -H 'x-apigw-api-id: YOUR_API_GATEWAY_ID' \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/automated_answer" \
+  -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
     "query": "経費精算の期限はいつですか？",
-    "company_code": "MMC",
-    "office_code": "MM00",
+    "company_code": "mmc",
+    "office_code": "mm00"
+  }'
+```
+
+#### オプションパラメータを含むリクエスト
+
+```bash
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/automated_answer" \
+  -H 'x-apigw-api-id: qsenl832o9' \
+  -H 'Content-Type: application/json' \
+  -X POST \
+  -d '{
+    "query": "経費精算の期限はいつですか？",
+    "company_code": "mmc",
+    "office_code": "mm00",
     "language": "ja",
     "retrieval_mode": "hybrid",
     "top_n": 5
@@ -166,11 +185,43 @@ curl -v "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag
 
 ### レスポンスボディの共通フィールド
 
-| フィールド                | 型              | 説明                                  |
-| ------------------------- | --------------- | ------------------------------------- |
-| `session_id`              | `string`        | セッションID（UUIDv4形式）            |
-| `chat_history`            | `array`         | 対話履歴（質問・回答のペア）          |
-| `business_sub_categories` | `array<string>` | 特定された業務小分類リスト（最大5件） |
+| フィールド                | 型              | 説明                                                   |
+| ------------------------- | --------------- | ------------------------------------------------------ |
+| `session_id`              | `string`        | セッションID（UUIDv4形式）                             |
+| `chat_history`            | `array`         | 対話履歴（質問・回答のペア）                           |
+| `business_sub_categories` | `array<string>` | 特定された業務小分類リスト（最大5件）                  |
+| `manned_counter_info`     | `array<object>` | 有人窓口情報のリスト（各業務小分類に対応する窓口情報） |
+
+#### 有人窓口情報の構造
+
+```json
+{
+  "manned_counter_info": [
+    {
+      "business_sub_category": "人事",
+      "manned_counter_name": "人事総務窓口",
+      "manned_counter_email": "jinji@example.com",
+      "manned_counter_description": "人事・採用に関するお問い合わせ",
+      "is_office_access_only": false
+    },
+    {
+      "business_sub_category": "IT",
+      "manned_counter_name": "ITヘルプデスク",
+      "manned_counter_email": "helpdesk@example.com",
+      "manned_counter_description": "システム・ネットワークに関するお問い合わせ",
+      "is_office_access_only": true
+    }
+  ]
+}
+```
+
+| フィールド                   | 型         | 説明                                                                                       |
+| ---------------------------- | ---------- | ------------------------------------------------------------------------------------------ |
+| `business_sub_category`      | `string`   | 業務小分類名                                                                               |
+| `manned_counter_name`        | `string?`  | 有人窓口の名称（任意）                                                                     |
+| `manned_counter_email`       | `string?`  | 有人窓口のメールアドレス（任意）                                                           |
+| `manned_counter_description` | `string?`  | 有人窓口の説明文（任意）                                                                   |
+| `is_office_access_only`      | `boolean?` | 事業所アクセス制限フラグ（任意）。`true`の場合、該当業務小分類は特定事業所のみアクセス可能 |
 
 #### チャット履歴の構造
 
@@ -213,7 +264,23 @@ curl -v "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag
   "body": {
     "session_id": "550e8400-e29b-41d4-a716-446655440000",
     "chat_history": [...],
-    "business_sub_categories": ["経理", "総務"],
+    "business_sub_categories": ["施設管理", "安全衛生"],
+    "manned_counter_info": [
+      {
+        "business_sub_category": "施設管理",
+        "manned_counter_name": "施設管理課",
+        "manned_counter_email": "facility@example.com",
+        "manned_counter_description": "施設・設備に関するお問い合わせ",
+        "is_office_access_only": true
+      },
+      {
+        "business_sub_category": "安全衛生",
+        "manned_counter_name": "安全衛生委員会",
+        "manned_counter_email": "safety@example.com",
+        "manned_counter_description": "安全衛生に関するお問い合わせ",
+        "is_office_access_only": false
+      }
+    ],
     "message": "頂いたご質問に関する情報については、回答できませんでした。なお、この質問につきましては、管理者により回答が差し控えられている可能性がございます。詳しくは、有人窓口へお問い合わせください。",
     "no_index_available": true
   }
@@ -239,27 +306,38 @@ FAQインデックスのみが有効で、検索結果がある場合。
   "body": {
     "session_id": "550e8400-e29b-41d4-a716-446655440000",
     "chat_history": [...],
-    "business_sub_categories": ["経理"],
-    "faq_answer": [
-      "経費精算の期限は毎月末日です。",
-      "交通費の精算は翌月10日までに提出してください。"
+    "business_sub_categories": ["IT"],
+    "manned_counter_info": [
+      {
+        "business_sub_category": "IT",
+        "manned_counter_name": "ITヘルプデスク",
+        "manned_counter_email": "helpdesk@example.com",
+        "manned_counter_description": "システム・ネットワークに関するお問い合わせ",
+        "is_office_access_only": false
+      }
     ],
-    "faq_source_files": [
-      "FAQ-001.md",
-      "FAQ-002.md"
-    ],
-    "faq_chunk_ids": [
-      "chunk_id_001",
-      "chunk_id_002"
-    ],
-    "faq_source_texts": [
-      "Q: 経費精算の期限は？\nA: 経費精算の期限は毎月末日です...",
-      "Q: 交通費精算は？\nA: 交通費の精算は翌月10日までに..."
-    ],
-    "faq_metadata_list": [
-      "{\"business_sub_category\": \"経理\", \"office_codes\": [\"MM00\"]}",
-      "{\"business_sub_category\": \"経理\", \"office_codes\": [\"all\"]}"
-    ]
+    "faq": {
+      "answer": [
+        "パスワードリセットは社内ポータルから申請できます。",
+        "VPN接続の手順はIT部門のナレッジベースを参照してください。"
+      ],
+      "source_files": [
+        "FAQ-IT-001.md",
+        "FAQ-IT-002.md"
+      ],
+      "chunk_ids": [
+        "chunk_it_001",
+        "chunk_it_002"
+      ],
+      "source_texts": [
+        "Q: パスワードリセットの方法は？\nA: パスワードリセットは社内ポータルから申請できます...",
+        "Q: VPN接続方法は？\nA: VPN接続の手順はIT部門のナレッジベースを参照してください..."
+      ],
+      "metadata_list": [
+        "{\"business_sub_category\": \"IT\", \"office_codes\": [\"all\"]}",
+        "{\"business_sub_category\": \"IT\", \"office_codes\": [\"all\"]}"
+      ]
+    }
   }
 }
 ```
@@ -268,11 +346,12 @@ FAQインデックスのみが有効で、検索結果がある場合。
 
 | フィールド          | 型              | 説明                                                   |
 | ------------------- | --------------- | ------------------------------------------------------ |
-| `faq_answer`        | `array<string>` | FAQ回答リスト（検索結果をそのまま返却、最大`top_n`件） |
-| `faq_source_files`  | `array<string>` | FAQソースファイル名リスト                              |
-| `faq_chunk_ids`     | `array<string>` | FAQチャンクIDリスト                                    |
-| `faq_source_texts`  | `array<string>` | FAQ参照チャンクのテキストリスト                        |
-| `faq_metadata_list` | `array<string>` | FAQ参照チャンクのメタデータリスト（JSON文字列）        |
+| `faq`               | `object`        | FAQ結果を含む辞書オブジェクト                          |
+| `faq.answer`        | `array<string>` | FAQ回答リスト（検索結果をそのまま返却、最大`top_n`件） |
+| `faq.source_files`  | `array<string>` | FAQソースファイル名リスト                              |
+| `faq.chunk_ids`     | `array<string>` | FAQチャンクIDリスト                                    |
+| `faq.source_texts`  | `array<string>` | FAQ参照チャンクのテキストリスト                        |
+| `faq.metadata_list` | `array<string>` | FAQ参照チャンクのメタデータリスト（JSON文字列）        |
 
 **特徴:**
 
@@ -292,28 +371,46 @@ RAGインデックスのみが有効で、LLMが回答を生成した場合。
   "body": {
     "session_id": "550e8400-e29b-41d4-a716-446655440000",
     "chat_history": [...],
-    "business_sub_categories": ["経理", "総務"],
-    "rag_answer": "経費精算の期限は、会社規程により毎月末日までとなっています。ただし、交通費については翌月10日までに提出する必要があります。詳細は経理部門にお問い合わせください。",
-    "rag_source_files": [
-      "company_rules.pdf",
-      "expense_guide.docx",
-      "travel_expense_policy.pdf"
+    "business_sub_categories": ["法務", "コンプライアンス"],
+    "manned_counter_info": [
+      {
+        "business_sub_category": "法務",
+        "manned_counter_name": "法務相談窓口",
+        "manned_counter_email": "legal@example.com",
+        "manned_counter_description": "契約・法務に関するお問い合わせ",
+        "is_office_access_only": true
+      },
+      {
+        "business_sub_category": "コンプライアンス",
+        "manned_counter_name": "コンプライアンス窓口",
+        "manned_counter_email": "compliance@example.com",
+        "manned_counter_description": "コンプライアンスに関するお問い合わせ",
+        "is_office_access_only": false
+      }
     ],
-    "rag_chunk_ids": [
-      "chunk_id_101",
-      "chunk_id_102",
-      "chunk_id_103"
-    ],
-    "rag_source_texts": [
-      "第3章 経費精算\n3.1 精算期限\n経費精算は毎月末日までに...",
-      "交通費精算について\n交通費の精算は翌月10日までに...",
-      "経理部問い合わせ先\n経理部: keiri@example.com..."
-    ],
-    "rag_metadata_list": [
-      "{\"business_sub_category\": \"経理\", \"document_type\": \"規程\"}",
-      "{\"business_sub_category\": \"総務\", \"document_type\": \"ガイド\"}",
-      "{\"business_sub_category\": \"経理\", \"document_type\": \"ポリシー\"}"
-    ]
+    "rag": {
+      "answer": "契約書の承認プロセスは、まず所属部門長の承認を得た後、法務部門によるリーガルチェックを受ける必要があります。金額が1000万円を超える場合は、さらに経営会議での承認が必要となります。詳細は法務部門にお問い合わせください。",
+      "source_files": [
+        "contract_approval_process.pdf",
+        "legal_guidelines.docx",
+        "compliance_manual.pdf"
+      ],
+      "chunk_ids": [
+        "chunk_legal_101",
+        "chunk_legal_102",
+        "chunk_legal_103"
+      ],
+      "source_texts": [
+        "第2章 契約書承認フロー\n2.1 承認プロセス\n契約書は所属部門長の承認後、法務部門によるリーガルチェックが必要です...",
+        "高額契約の取扱い\n1000万円を超える契約については経営会議での承認が必須となります...",
+        "法務部問い合わせ先\n法務部: legal@example.com..."
+      ],
+      "metadata_list": [
+        "{\"business_sub_category\": \"法務\", \"document_type\": \"規程\"}",
+        "{\"business_sub_category\": \"法務\", \"document_type\": \"ガイドライン\"}",
+        "{\"business_sub_category\": \"コンプライアンス\", \"document_type\": \"マニュアル\"}"
+      ]
+    }
   }
 }
 ```
@@ -322,11 +419,12 @@ RAGインデックスのみが有効で、LLMが回答を生成した場合。
 
 | フィールド          | 型              | 説明                                                           |
 | ------------------- | --------------- | -------------------------------------------------------------- |
-| `rag_answer`        | `string`        | LLMが生成した自然な回答文                                      |
-| `rag_source_files`  | `array<string>` | RAGソースファイル名リスト（最大`top_n`件）                     |
-| `rag_chunk_ids`     | `array<string>` | RAGチャンクIDリスト（最大`top_n`件）                           |
-| `rag_source_texts`  | `array<string>` | RAG参照チャンクのテキストリスト（最大`top_n`件）               |
-| `rag_metadata_list` | `array<string>` | RAG参照チャンクのメタデータリスト（JSON文字列、最大`top_n`件） |
+| `rag`               | `object`        | RAG結果を含む辞書オブジェクト                                  |
+| `rag.answer`        | `string`        | LLMが生成した自然な回答文                                      |
+| `rag.source_files`  | `array<string>` | RAGソースファイル名リスト（最大`top_n`件）                     |
+| `rag.chunk_ids`     | `array<string>` | RAGチャンクIDリスト（最大`top_n`件）                           |
+| `rag.source_texts`  | `array<string>` | RAG参照チャンクのテキストリスト（最大`top_n`件）               |
+| `rag.metadata_list` | `array<string>` | RAG参照チャンクのメタデータリスト（JSON文字列、最大`top_n`件） |
 
 **特徴:**
 
@@ -346,24 +444,44 @@ FAQとRAGの両方が有効で、両方の結果がある場合。
   "body": {
     "session_id": "550e8400-e29b-41d4-a716-446655440000",
     "chat_history": [...],
-    "business_sub_categories": ["経理", "総務"],
+    "business_sub_categories": ["営業", "マーケティング"],
+    "manned_counter_info": [
+      {
+        "business_sub_category": "営業",
+        "manned_counter_name": "営業支援窓口",
+        "manned_counter_email": "sales-support@example.com",
+        "manned_counter_description": "営業活動に関するお問い合わせ",
+        "is_office_access_only": false
+      },
+      {
+        "business_sub_category": "マーケティング",
+        "manned_counter_name": "マーケティング部",
+        "manned_counter_email": "marketing@example.com",
+        "manned_counter_description": "マーケティング施策に関するお問い合わせ",
+        "is_office_access_only": true
+      }
+    ],
 
     // FAQ結果
-    "faq_answer": [
-      "経費精算の期限は毎月末日です。",
-      "交通費の精算は翌月10日までに提出してください。"
-    ],
-    "faq_source_files": ["FAQ-001.md", "FAQ-002.md"],
-    "faq_chunk_ids": ["chunk_faq_001", "chunk_faq_002"],
-    "faq_source_texts": [...],
-    "faq_metadata_list": [...],
+    "faq": {
+      "answer": [
+        "顧客情報の登録はCRMシステムから行います。",
+        "見積書のテンプレートは営業ポータルからダウンロードできます。"
+      ],
+      "source_files": ["FAQ-SALES-001.md", "FAQ-SALES-002.md"],
+      "chunk_ids": ["chunk_faq_sales_001", "chunk_faq_sales_002"],
+      "source_texts": [...],
+      "metadata_list": [...]
+    },
 
     // RAG結果
-    "rag_answer": "経費精算の期限は、会社規程により毎月末日までとなっています。ただし、交通費については翌月10日までに提出する必要があります。",
-    "rag_source_files": ["company_rules.pdf", "expense_guide.docx"],
-    "rag_chunk_ids": ["chunk_rag_101", "chunk_rag_102"],
-    "rag_source_texts": [...],
-    "rag_metadata_list": [...]
+    "rag": {
+      "answer": "顧客情報の登録は、CRMシステムの「新規顧客登録」メニューから行います。必須項目として会社名、担当者名、連絡先を入力し、営業担当者を割り当ててください。見積書は営業ポータルのテンプレートを使用し、承認フローに従って提出してください。",
+      "source_files": ["crm_manual.pdf", "sales_operations_guide.docx"],
+      "chunk_ids": ["chunk_rag_sales_101", "chunk_rag_sales_102"],
+      "source_texts": [...],
+      "metadata_list": [...]
+    }
   }
 }
 ```
@@ -489,13 +607,14 @@ FAQとRAGの両方が有効で、両方の結果がある場合。
 **リクエスト:**
 
 ```bash
-curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/automated_answer" \
+  -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
-  -H 'x-apigw-api-id: YOUR_API_GATEWAY_ID' \
+  -X POST \
   -d '{
     "query": "有給休暇の申請方法を教えてください",
-    "company_code": "MMC",
-    "office_code": "MM00",
+    "company_code": "mmc",
+    "office_code": "mm00",
     "language": "ja"
   }'
 ```
@@ -518,13 +637,22 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
       }
     ],
     "business_sub_categories": ["人事"],
-    "rag_answer": "有給休暇の申請は、社内システムから申請フォームを提出してください...",
-    "rag_source_files": ["hr_guide.pdf"],
-    "rag_chunk_ids": ["chunk_001"],
-    "rag_source_texts": [
-      "有給休暇の申請手順\n1. 社内システムにログイン\n2. ..."
+    "manned_counter_info": [
+      {
+        "business_sub_category": "人事",
+        "manned_counter_name": "人事窓口",
+        "manned_counter_email": "jinji@example.com",
+        "manned_counter_description": "人事に関するお問い合わせ",
+        "is_office_access_only": false
+      }
     ],
-    "rag_metadata_list": ["{\"business_sub_category\": \"人事\"}"]
+    "rag": {
+      "answer": "有給休暇の申請は、社内システムから申請フォームを提出してください...",
+      "source_files": ["hr_guide.pdf"],
+      "chunk_ids": ["chunk_001"],
+      "source_texts": ["有給休暇の申請手順\n1. 社内システムにログイン\n2. ..."],
+      "metadata_list": ["{\"business_sub_category\": \"人事\"}"]
+    }
   }
 }
 ```
@@ -536,13 +664,14 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
 **リクエスト:**
 
 ```bash
-curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/automated_answer" \
+  -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
-  -H 'x-apigw-api-id: YOUR_API_GATEWAY_ID' \
+  -X POST \
   -d '{
     "query": "締め切りはいつですか？",
-    "company_code": "MMC",
-    "office_code": "MM00",
+    "company_code": "mmc",
+    "office_code": "mm00",
     "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "language": "ja"
   }'
@@ -574,13 +703,24 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
       }
     ],
     "business_sub_categories": ["人事"],
-    "rag_answer": "有給休暇の申請締め切りは、取得希望日の3営業日前までです。",
-    "rag_source_files": ["hr_guide.pdf"],
-    "rag_chunk_ids": ["chunk_002"],
-    "rag_source_texts": [
-      "申請締め切り\n有給休暇は取得希望日の3営業日前までに..."
+    "manned_counter_info": [
+      {
+        "business_sub_category": "人事",
+        "manned_counter_name": "人事窓口",
+        "manned_counter_email": "jinji@example.com",
+        "manned_counter_description": "人事に関するお問い合わせ",
+        "is_office_access_only": false
+      }
     ],
-    "rag_metadata_list": ["{\"business_sub_category\": \"人事\"}"]
+    "rag": {
+      "answer": "有給休暇の申請締め切りは、取得希望日の3営業日前までです。",
+      "source_files": ["hr_guide.pdf"],
+      "chunk_ids": ["chunk_002"],
+      "source_texts": [
+        "申請締め切り\n有給休暇は取得希望日の3営業日前までに..."
+      ],
+      "metadata_list": ["{\"business_sub_category\": \"人事\"}"]
+    }
   }
 }
 ```
@@ -597,13 +737,14 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
 **リクエスト:**
 
 ```bash
-curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/automated_answer" \
+  -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
-  -H 'x-apigw-api-id: YOUR_API_GATEWAY_ID' \
+  -X POST \
   -d '{
-    "query": "経費精算について教えてください",
-    "company_code": "MMC",
-    "office_code": "MM00",
+    "query": "テレワークの申請方法を教えてください",
+    "company_code": "mmc",
+    "office_code": "mm00",
     "language": "ja",
     "top_n": 3
   }'
@@ -617,23 +758,43 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
   "body": {
     "session_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "chat_history": [...],
-    "business_sub_categories": ["経理", "総務"],
-
-    "faq_answer": [
-      "経費精算の期限は毎月末日です。",
-      "交通費の精算は翌月10日までです。",
-      "領収書は必ず原本を提出してください。"
+    "business_sub_categories": ["総務", "人事"],
+    "manned_counter_info": [
+      {
+        "business_sub_category": "総務",
+        "manned_counter_name": "総務課",
+        "manned_counter_email": "soumu@example.com",
+        "manned_counter_description": "総務全般に関するお問い合わせ",
+        "is_office_access_only": false
+      },
+      {
+        "business_sub_category": "人事",
+        "manned_counter_name": "人事総務窓口",
+        "manned_counter_email": "jinji@example.com",
+        "manned_counter_description": "人事・労務に関するお問い合わせ",
+        "is_office_access_only": true
+      }
     ],
-    "faq_source_files": ["FAQ-001.md", "FAQ-002.md", "FAQ-003.md"],
-    "faq_chunk_ids": ["faq_001", "faq_002", "faq_003"],
-    "faq_source_texts": [...],
-    "faq_metadata_list": [...],
 
-    "rag_answer": "経費精算は、会社規程に基づき毎月末日までに提出する必要があります。交通費については翌月10日までの提出が認められています。必ず領収書の原本を添付してください。詳細は経理部門にお問い合わせください。",
-    "rag_source_files": ["company_rules.pdf", "expense_guide.docx", "faq_detail.pdf"],
-    "rag_chunk_ids": ["rag_101", "rag_102", "rag_103"],
-    "rag_source_texts": [...],
-    "rag_metadata_list": [...]
+    "faq": {
+      "answer": [
+        "テレワークの申請は勤怠システムから行います。",
+        "申請は前日までに上長の承認を得る必要があります。",
+        "緊急時は事後申請も可能です。"
+      ],
+      "source_files": ["FAQ-TELEWORK-001.md", "FAQ-TELEWORK-002.md", "FAQ-TELEWORK-003.md"],
+      "chunk_ids": ["faq_telework_001", "faq_telework_002", "faq_telework_003"],
+      "source_texts": [...],
+      "metadata_list": [...]
+    },
+
+    "rag": {
+      "answer": "テレワークの申請は、勤怠システムの「テレワーク申請」メニューから行います。原則として前日までに申請し、上長の承認を得る必要があります。緊急時やむを得ない場合は事後申請も認められますが、当日中に申請を完了してください。詳細は総務課にお問い合わせください。",
+      "source_files": ["telework_policy.pdf", "attendance_manual.docx", "hr_guidelines.pdf"],
+      "chunk_ids": ["rag_telework_101", "rag_telework_102", "rag_telework_103"],
+      "source_texts": [...],
+      "metadata_list": [...]
+    }
   }
 }
 ```
@@ -651,13 +812,14 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
 **リクエスト:**
 
 ```bash
-curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/rag" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/automated_answer" \
+  -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
-  -H 'x-apigw-api-id: YOUR_API_GATEWAY_ID' \
+  -X POST \
   -d '{
-    "query": "機密情報について教えてください",
-    "company_code": "MMC",
-    "office_code": "MM00",
+    "query": "新規プロジェクトの予算申請について教えてください",
+    "company_code": "mmc",
+    "office_code": "mm00",
     "language": "ja"
   }'
 ```
@@ -672,14 +834,23 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
     "chat_history": [
       {
         "role": "user",
-        "content": "機密情報について教えてください"
+        "content": "新規プロジェクトの予算申請について教えてください"
       },
       {
         "role": "assistant",
         "content": "頂いたご質問に関する情報については、回答できませんでした。なお、この質問につきましては、管理者により回答が差し控えられている可能性がございます。詳しくは、有人窓口へお問い合わせください。"
       }
     ],
-    "business_sub_categories": ["機密管理"],
+    "business_sub_categories": ["経営企画"],
+    "manned_counter_info": [
+      {
+        "business_sub_category": "経営企画",
+        "manned_counter_name": "経営企画部",
+        "manned_counter_email": "planning@example.com",
+        "manned_counter_description": "経営企画・予算に関するお問い合わせ",
+        "is_office_access_only": true
+      }
+    ],
     "message": "頂いたご質問に関する情報については、回答できませんでした。なお、この質問につきましては、管理者により回答が差し控えられている可能性がございます。詳しくは、有人窓口へお問い合わせください。",
     "no_index_available": true
   }
@@ -762,5 +933,9 @@ curl -X POST "https://vpce-XXXXX.execute-api.ap-northeast-1.vpce.amazonaws.com/v
 ## バージョン情報
 
 - **API バージョン:** v1
-- **最終更新日:** 2025-12-03
-- **ドキュメントバージョン:** 1.0.0
+- **最終更新日:** 2025-12-08
+- **ドキュメントバージョン:** 1.2.0
+- **変更履歴:**
+  - v1.2.0 (2025-12-08): 固定パラメータの注記を追加、すべてのレスポンス例に`manned_counter_info`を追加
+  - v1.1.0 (2025-12-04): レスポンス形式を辞書ネスト構造に変更（`faq`と`rag`オブジェクト）
+  - v1.0.0 (2025-12-03): 初版リリース
