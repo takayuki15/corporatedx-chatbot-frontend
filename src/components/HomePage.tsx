@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, IconButton } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { BsLayoutSidebar } from 'react-icons/bs';
 
@@ -9,12 +9,14 @@ import ChatInput from '@/components/chat/ChatInput';
 import ChatHeader from '@/components/chat/ChatHeader';
 import TermsModal from '@/components/common/TermsModal';
 import Sidebar from '@/components/layout/Sidebar';
+import SupportSidebar from '@/components/layout/SupportSidebar';
 import { useRagChat } from '@/hooks';
 import { deleteChatHistory } from '@/lib/storage';
 
 export default function HomePage() {
   const [chatInputValue, setChatInputValue] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [supportSidebarOpen, setSupportSidebarOpen] = useState(false);
 
   // RAGチャット機能を使用
   const { messages, loading, error, lastUserMessage, sendMessage, resetSession, loadSession } = useRagChat();
@@ -61,8 +63,7 @@ export default function HomePage() {
 
   // 有人窓口ボタンクリック時の処理
   const handleSupport = () => {
-    // TODO: 有人窓口への遷移処理を実装
-    console.log('有人窓口へ遷移');
+    setSupportSidebarOpen(true);
   };
 
   // チャットタイトルを取得（初回ユーザー入力の先頭15文字）
@@ -80,7 +81,7 @@ export default function HomePage() {
   const hasMessages = messages.length > 0;
 
   return (
-    <Container maxWidth="lg">
+    <>
       {/* 利用規約モーダル */}
       <TermsModal />
 
@@ -93,6 +94,12 @@ export default function HomePage() {
           onNewChat={handleNewChat}
         />
 
+        {/* 有人窓口サイドバー */}
+        <SupportSidebar
+          open={supportSidebarOpen}
+          onClose={() => setSupportSidebarOpen(false)}
+        />
+
         {/* メインコンテンツ */}
         <Box
           component="main"
@@ -101,6 +108,7 @@ export default function HomePage() {
             display: 'flex',
             flexDirection: 'column',
             height: '100vh',
+            width: '100%',
             marginLeft: sidebarOpen ? '280px' : 0,
             transition: 'margin-left 0.3s ease',
           }}
@@ -227,6 +235,6 @@ export default function HomePage() {
           </Box>
         </Box>
       </Box>
-    </Container>
+    </>
   );
 }

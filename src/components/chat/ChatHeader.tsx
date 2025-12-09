@@ -19,16 +19,17 @@ export default function ChatHeader({ title, onDelete, onSupport }: ChatHeaderPro
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        px: 3,
+        px: 4,
         py: 2,
         borderBottom: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
+        width: '100%',
       }}
     >
       {/* 左側: タイトル + 削除アイコン */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
           {title}
         </Typography>
         {onDelete && (
@@ -57,10 +58,10 @@ export default function ChatHeader({ title, onDelete, onSupport }: ChatHeaderPro
           textTransform: 'none',
           borderRadius: 2,
           borderColor: 'divider',
-          color: 'text.primary',
+          color: '#6E41FF',
           '&:hover': {
-            borderColor: 'primary.main',
-            bgcolor: 'primary.lighter',
+            borderColor: '#6E41FF',
+            bgcolor: 'rgba(110, 65, 255, 0.15)',
           },
         }}
       >
