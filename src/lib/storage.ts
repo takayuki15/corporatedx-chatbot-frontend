@@ -91,3 +91,52 @@ export function getSessionLastUpdate(sessionId: string): Date | null {
     return null;
   }
 }
+
+/**
+ * Employee情報（company_code, office_code）の保存・取得
+ */
+
+const EMPLOYEE_INFO_KEY = 'employee_info';
+
+export interface EmployeeInfo {
+  company_code: string;
+  office_code: string;
+}
+
+/**
+ * Employee情報を保存
+ */
+export function saveEmployeeInfo(info: EmployeeInfo): void {
+  try {
+    localStorage.setItem(EMPLOYEE_INFO_KEY, JSON.stringify(info));
+  } catch (error) {
+    console.error('Failed to save employee info to localStorage:', error);
+  }
+}
+
+/**
+ * Employee情報を読み込み
+ */
+export function loadEmployeeInfo(): EmployeeInfo | null {
+  try {
+    const data = localStorage.getItem(EMPLOYEE_INFO_KEY);
+    if (!data) {
+      return null;
+    }
+    return JSON.parse(data) as EmployeeInfo;
+  } catch (error) {
+    console.error('Failed to load employee info from localStorage:', error);
+    return null;
+  }
+}
+
+/**
+ * Employee情報を削除
+ */
+export function deleteEmployeeInfo(): void {
+  try {
+    localStorage.removeItem(EMPLOYEE_INFO_KEY);
+  } catch (error) {
+    console.error('Failed to delete employee info from localStorage:', error);
+  }
+}

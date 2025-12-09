@@ -35,6 +35,8 @@ export interface User {
 export interface Employee {
   name?: string;
   company?: string;
+  company_code?: string;
+  office_code?: string;
   department?: string;
   displayName?: string;
   lastLogonTimestamp?: string;
