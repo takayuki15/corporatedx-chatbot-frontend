@@ -1,12 +1,12 @@
 'use client';
 
-import { Box, Link, Popover, Typography } from '@mui/material';
+import { Box, Popover, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 
 export interface Citation {
   id: string;
   title: string;
-  url: string;
+  file_name: string;
   description?: string;
 }
 
@@ -93,25 +93,15 @@ export default function CitationPopover({
               {citation.description}
             </Typography>
           )}
-          <Link
-            href={citation.url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Typography
+            variant="body2"
             sx={{
               fontSize: '0.875rem',
-              color: 'primary.main',
-              textDecoration: 'none',
-              display: 'block',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                textDecoration: 'underline',
-              },
+              color: 'text.secondary',
             }}
           >
-            {citation.url}
-          </Link>
+            {citation.file_name}
+          </Typography>
         </Box>
       </Popover>
     </>

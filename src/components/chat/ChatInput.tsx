@@ -1,19 +1,11 @@
 'use client';
 
-import {
-  AttachFile,
-  Image,
-  InfoOutlined,
-  Send,
-  WarningAmberOutlined,
-  BlockOutlined,
-} from '@mui/icons-material';
+import { AttachFile, Image, Send } from '@mui/icons-material';
 import {
   Alert,
   Box,
   Button,
   IconButton,
-  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -49,7 +41,7 @@ const StyledContainer = styled(Box)(({ theme }) => ({
 }));
 
 const AlertBar = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'isConfidential',
+  shouldForwardProp: prop => prop !== 'isConfidential',
 })<{ isConfidential: boolean }>(({ theme, isConfidential }) => ({
   margin: 0,
   borderRadius: 0,
@@ -240,49 +232,6 @@ export default function ChatInput({
       )}
 
       <StyledContainer>
-        {/* 機密情報バー */}
-        <AlertBar isConfidential={confidential}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {confidential ? (
-              <WarningAmberOutlined sx={{ color: '#555' }} />
-            ) : (
-              <BlockOutlined sx={{ color: '#555' }} />
-            )}
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {confidential
-                ? '入力内容は機密情報扱いとなります。'
-                : '機密情報を入力しないモードです。'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Switch
-              checked={confidential}
-              onChange={e => setConfidential(e.target.checked)}
-              size="small"
-              aria-label="機密情報入力モードの切り替え"
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: '#6E41FF',
-                  '&:hover': {
-                    backgroundColor: 'rgba(110, 65, 255, 0.04)',
-                  },
-                },
-                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: '#6E41FF',
-                },
-              }}
-            />
-            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-              機密情報を入力
-            </Typography>
-            <Tooltip title="機密情報の取り扱いについての詳細説明がここに表示されます。機密情報モードでは入力内容が適切にセキュリティ処理されます。">
-              <IconButton size="small" aria-label="機密情報について">
-                <InfoOutlined fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </AlertBar>
-
         {/* ファイル表示エリア */}
         {files.length > 0 && (
           <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>

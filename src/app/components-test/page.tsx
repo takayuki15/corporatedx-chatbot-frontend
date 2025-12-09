@@ -143,14 +143,14 @@ export default function ComponentsTestPage() {
                 {
                   id: 'citation-1',
                   title: 'コーポレート | 村田製作所',
-                  url: 'https://corporate.murata.com/ja-jp/',
+                  file_name: 'https://corporate.murata.com/ja-jp/',
                   description:
                     'コーポレートサイトです。企業情報、CSR、株主・投資家情報など、さまざまな情報を掲載しています。',
                 },
                 {
                   id: 'citation-2',
                   title: 'Amazon',
-                  url: 'https://www.amazon.co.jp/',
+                  file_name: 'https://www.amazon.co.jp/',
                   description:
                     'Amazon.co.jp 公式サイト。アマゾンで本, 日用品, ファッション, 食品, ベビー用品, カー用品ほか一億種の商品をいつでもお安く。',
                 },

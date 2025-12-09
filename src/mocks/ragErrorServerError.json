@@ -1,0 +1,6 @@
+{
+  "statusCode": 500,
+  "body": {
+    "error": "RAG システムの Lambda 関数のアプリケーションコード実行時に予期せぬエラーが発生しました。エラー内容：Internal server error occurred during processing."
+  }
+}

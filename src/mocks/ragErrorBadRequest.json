@@ -1,0 +1,6 @@
+{
+  "statusCode": 400,
+  "body": {
+    "error": "リクエストパラメータのバリデーションエラー: [{'loc': ['query'], 'msg': 'field required', 'type': 'value_error.missing'}]"
+  }
+}

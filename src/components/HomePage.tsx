@@ -1,38 +1,121 @@
 'use client';
 
-import { Box, Container, IconButton } from '@mui/material';
-import { useState } from 'react';
+import { Box, IconButton } from '@mui/material';
+import { useState, useEffect } from 'react';
 import { BsLayoutSidebar } from 'react-icons/bs';
 
+import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
+import ChatHeader from '@/components/chat/ChatHeader';
+import TermsMessage from '@/components/chat/TermsMessage';
 import Sidebar from '@/components/layout/Sidebar';
-import QuickActions from '@/components/QuickActions';
-import TermsModal from '@/components/common/TermsModal';
+import SupportSidebar from '@/components/layout/SupportSidebar';
+import { useRagChat } from '@/hooks';
+import { deleteChatHistory } from '@/lib/storage';
 
 export default function HomePage() {
   const [chatInputValue, setChatInputValue] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [supportSidebarOpen, setSupportSidebarOpen] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const handleChatSend = (
+  // RAGチャット機能を使用
+  const { messages, loading, error, lastUserMessage, sendMessage, resetSession, loadSession } = useRagChat();
+
+  // 利用規約の同意状態をチェック
+  useEffect(() => {
+    const termsConsent = sessionStorage.getItem('termsConsent');
+    setTermsAccepted(termsConsent === 'accepted');
+  }, []);
+
+  const handleChatSend = async (
     text: string,
     options: { confidential: boolean; files: File[] }
   ) => {
-    // eslint-disable-next-line no-console
-    console.log('Chat message sent:', { text, options });
+    try {
+      // TODO: confidentialフラグとfilesをバックエンドに送信する処理を追加
+      console.log('Chat options:', {
+        confidential: options.confidential,
+        filesCount: options.files.length,
+      });
+
+      await sendMessage(text);
+      setChatInputValue('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // エラーは useRagChat で管理されるため、ここでは追加処理不要
+    }
   };
 
-  const handleQuickActionSelect = (text: string) => {
-    setChatInputValue(text);
+  // セッション選択時の処理
+  const handleSelectSession = (sessionId: string) => {
+    loadSession(sessionId);
   };
+
+  // 新しいチャット開始時の処理
+  const handleNewChat = () => {
+    resetSession();
+    // 新しいチャット開始時に利用規約を再表示
+    sessionStorage.removeItem('termsConsent');
+    setTermsAccepted(false);
+  };
+
+  // チャット削除時の処理
+  const handleDeleteChat = () => {
+    if (confirm('このチャットを削除しますか？')) {
+      const currentSessionId = messages[0]?.session_id;
+      if (currentSessionId) {
+        deleteChatHistory(currentSessionId);
+      }
+      resetSession();
+    }
+  };
+
+  // 有人窓口ボタンクリック時の処理
+  const handleSupport = () => {
+    setSupportSidebarOpen(true);
+  };
+
+  // 利用規約同意状態変更ハンドラー
+  const handleTermsAgreeChange = (agreed: boolean) => {
+    if (agreed) {
+      sessionStorage.setItem('termsConsent', 'accepted');
+    } else {
+      sessionStorage.removeItem('termsConsent');
+    }
+    setTermsAccepted(agreed);
+  };
+
+  // チャットタイトルを取得（初回ユーザー入力の先頭15文字）
+  const getChatTitle = () => {
+    if (messages.length === 0) return '新しいチャット';
+
+    const firstUserMessage = messages[0]?.chat_history?.find(
+      msg => msg.role === 'user'
+    );
+    const title = firstUserMessage?.content || '新しいチャット';
+    return title.length > 15 ? title.substring(0, 15) + '...' : title;
+  };
+
+  // メッセージがある場合とない場合でレイアウトを切り替え
+  const hasMessages = messages.length > 0;
 
   return (
-    <Container maxWidth="lg">
-      {/* 利用規約モーダル */}
-      <TermsModal />
-
+    <>
       <Box sx={{ display: 'flex', height: '100vh' }}>
         {/* 既存のSidebarコンポーネントを使用 */}
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onSelectSession={handleSelectSession}
+          onNewChat={handleNewChat}
+        />
+
+        {/* 有人窓口サイドバー */}
+        <SupportSidebar
+          open={supportSidebarOpen}
+          onClose={() => setSupportSidebarOpen(false)}
+        />
 
         {/* メインコンテンツ */}
         <Box
@@ -42,6 +125,7 @@ export default function HomePage() {
             display: 'flex',
             flexDirection: 'column',
             height: '100vh',
+            width: '100%',
             marginLeft: sidebarOpen ? '280px' : 0,
             transition: 'margin-left 0.3s ease',
           }}
@@ -77,46 +161,100 @@ export default function HomePage() {
             </Box>
           )}
 
+          {/* ヘッダー（メッセージがある場合のみ表示） */}
+          {hasMessages && (
+            <ChatHeader
+              title={getChatTitle()}
+              onDelete={handleDeleteChat}
+              onSupport={handleSupport}
+            />
+          )}
+
           {/* メインエリア */}
           <Box
             sx={{
               flexGrow: 1,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              px: 4,
-              pt: 8,
+              ...(hasMessages
+                ? {
+                    // メッセージがある場合: チャット履歴を上部に表示
+                    justifyContent: 'flex-start',
+                  }
+                : {
+                    // メッセージがない場合: 中央に配置
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    px: 4,
+                    pt: 8,
+                  }),
               pb: 4,
-              overflow: 'auto',
+              overflow: 'hidden',
             }}
           >
-            <Box
-              sx={{
-                maxWidth: 900,
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                mt: 6,
-              }}
-            >
-              <QuickActions onActionSelect={handleQuickActionSelect} />
-
-              {/* チャット入力エリア（クイックアクションのすぐ下） */}
-              <Box sx={{ width: '100%', maxWidth: 800 }}>
-                <ChatInput
-                  onSend={handleChatSend}
-                  value={chatInputValue}
-                  onChange={setChatInputValue}
+            {hasMessages ? (
+              // チャット履歴表示モード
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  maxWidth: 900,
+                  width: '100%',
+                  mx: 'auto',
+                }}
+              >
+                <ChatHistory
+                  messages={messages}
+                  loading={loading}
+                  error={error}
+                  lastUserMessage={lastUserMessage}
                 />
+
+                {/* チャット入力エリア（下部固定） */}
+                <Box sx={{ px: 3, pb: 2 }}>
+                  <ChatInput
+                    onSend={handleChatSend}
+                    value={chatInputValue}
+                    onChange={setChatInputValue}
+                    disabled={loading}
+                    loading={loading}
+                  />
+                </Box>
               </Box>
-            </Box>
+            ) : (
+              // 初期表示モード
+              <Box
+                sx={{
+                  maxWidth: 900,
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  gap: 4,
+                  mt: 6,
+                }}
+              >
+                {/* 利用規約 */}
+                <TermsMessage onAgreeChange={handleTermsAgreeChange} />
+
+                {/* チャット入力エリア（常に表示、同意状態で有効/無効を切り替え） */}
+                <Box sx={{ width: '100%', maxWidth: 800, px: 3 }}>
+                  <ChatInput
+                    onSend={handleChatSend}
+                    value={chatInputValue}
+                    onChange={setChatInputValue}
+                    disabled={!termsAccepted || loading}
+                    loading={loading}
+                  />
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
-    </Container>
+    </>
   );
 }

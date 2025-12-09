@@ -117,7 +117,7 @@ export default function CitationLabel({ citations }: CitationLabelProps) {
                 </Typography>
               )}
               <Link
-                href={citation.url}
+                href={citation.file_name}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{
@@ -133,7 +133,7 @@ export default function CitationLabel({ citations }: CitationLabelProps) {
                   },
                 }}
               >
-                {citation.url}
+                {citation.file_name}
               </Link>
             </Box>
           ))}
