@@ -109,7 +109,23 @@ export class ApiClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const text = await response.text();
+        let errorData: any = {};
+        try {
+          errorData = JSON.parse(text);
+        } catch (_) {
+          errorData = { raw: text };
+        }
+
+        console.error('[ApiClient] Request Error:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: options.body,
+          errorData,
+        });
+
         const errorResponse: ErrorResponse = {
           error: errorData.error || `HTTP Error: ${response.status}`,
         };
