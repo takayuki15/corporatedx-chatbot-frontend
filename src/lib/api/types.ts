@@ -199,3 +199,44 @@ export interface RagApiResponse {
   statusCode: number;
   body: string; // JSON文字列
 }
+
+/**
+ * メール送信API関連の型定義
+ */
+
+/**
+ * メール添付ファイル
+ */
+export interface MailFile {
+  file_name: string;
+  file_data: string; // Base64エンコード
+}
+
+/**
+ * メール送信リクエスト
+ */
+export interface SendMailRequest {
+  questioner_email: string;
+  business_sub_category: string;
+  company_cd: string;
+  office_cd: string;
+  mail_content: string;
+  manned_counter_email: string;
+  is_office_access_only: boolean;
+  mail_file?: MailFile[];
+}
+
+/**
+ * メール送信レスポンス
+ */
+export interface SendMailResponse {
+  sent_text: string;
+}
+
+/**
+ * メール送信APIの生レスポンス（bodyがJSON文字列の場合）
+ */
+export interface SendMailApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列: {"sent_text": "..."}
+}

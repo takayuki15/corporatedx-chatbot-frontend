@@ -12,6 +12,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import SupportSidebar from '@/components/layout/SupportSidebar';
 import { useRagChat } from '@/hooks';
 import { deleteChatHistory } from '@/lib/storage';
+import type { MannedCounterInfo, ChatMessage } from '@/lib/api';
 
 export default function HomePage() {
   const [chatInputValue, setChatInputValue] = useState('');
@@ -100,6 +101,33 @@ export default function HomePage() {
   // メッセージがある場合とない場合でレイアウトを切り替え
   const hasMessages = messages.length > 0;
 
+  // 最新のRAGレスポンスから有人窓口情報を取得
+  const getMannedCounterData = (): {
+    mannedCounterInfo: MannedCounterInfo[];
+    chatHistory: ChatMessage[];
+    businessSubCategories: string[];
+  } => {
+    // 最新のメッセージから情報を取得
+    const latestMessage = messages[messages.length - 1];
+
+    if (!latestMessage) {
+      return {
+        mannedCounterInfo: [],
+        chatHistory: [],
+        businessSubCategories: [],
+      };
+    }
+
+    return {
+      mannedCounterInfo: latestMessage.manned_counter_info || [],
+      chatHistory: latestMessage.chat_history || [],
+      businessSubCategories: latestMessage.business_sub_categories || [],
+    };
+  };
+
+  const { mannedCounterInfo, chatHistory, businessSubCategories } =
+    getMannedCounterData();
+
   return (
     <>
       <Box sx={{ display: 'flex', height: '100vh' }}>
@@ -115,6 +143,9 @@ export default function HomePage() {
         <SupportSidebar
           open={supportSidebarOpen}
           onClose={() => setSupportSidebarOpen(false)}
+          mannedCounterInfo={mannedCounterInfo}
+          chatHistory={chatHistory}
+          businessSubCategories={businessSubCategories}
         />
 
         {/* メインコンテンツ */}

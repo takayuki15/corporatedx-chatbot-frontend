@@ -245,8 +245,17 @@ export default function ChatMessage({ response }: ChatMessageProps) {
           {/* パターン4: FAQ + RAG両方 */}
           {hasBoth && 'faq' in response && 'rag' in response && (
             <Box>
-              {/* 関連FAQ */}
+              {/* RAG回答 */}
               <Box sx={{ mb: 3 }}>
+                <RagAnswerWithCitations
+                  ragAnswer={response.rag.answer}
+                  ragSourceFiles={response.rag.source_files}
+                  ragSourceTexts={response.rag.source_texts}
+                />
+              </Box>
+
+              {/* 関連FAQ */}
+              <Box sx={{ mb: 1 }}>
                 <RelatedFAQ
                   faqAnswers={response.faq.answer}
                   faqSourceTexts={response.faq.source_texts}
@@ -254,16 +263,7 @@ export default function ChatMessage({ response }: ChatMessageProps) {
                   title="関連FAQ"
                 />
               </Box>
-
-              {/* RAG回答 */}
-              <Box>
-                <RagAnswerWithCitations
-                  ragAnswer={response.rag.answer}
-                  ragSourceFiles={response.rag.source_files}
-                  ragSourceTexts={response.rag.source_texts}
-                />
-                <FeedbackButtons />
-              </Box>
+              <FeedbackButtons />
             </Box>
           )}
         </Paper>

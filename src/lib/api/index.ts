@@ -15,6 +15,7 @@ export type {
   FaqOnlyResponse,
   FaqResult,
   LlmParams,
+  MailFile,
   MannedCounterInfo,
   NoIndexAvailableResponse,
   RagApiResponse,
@@ -22,5 +23,8 @@ export type {
   RagRequest,
   RagResponse,
   RagResult,
+  SendMailApiResponse,
+  SendMailRequest,
+  SendMailResponse,
   User,
 } from './types';

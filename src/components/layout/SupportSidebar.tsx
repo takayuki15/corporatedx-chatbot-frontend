@@ -22,18 +22,24 @@ import {
   TextField,
   Tooltip,
   Typography,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { useState } from 'react';
-
-interface SupportContact {
-  id: string;
-  name: string;
-  description: string;
-}
+import type {
+  MannedCounterInfo,
+  ChatMessage,
+  SendMailRequest,
+  SendMailResponse,
+} from '@/lib/api';
+import { useUserContext } from '@/contexts';
 
 interface SupportSidebarProps {
   open: boolean;
   onClose: () => void;
+  mannedCounterInfo: MannedCounterInfo[];
+  chatHistory: ChatMessage[];
+  businessSubCategories: string[];
 }
 
 interface InquiryFormData {
@@ -42,51 +48,26 @@ interface InquiryFormData {
 
 const steps = ['入力', '確認', '完了'];
 
-// 問い合わせ先のモックデータ
-const supportContacts: SupportContact[] = [
-  {
-    id: '1',
-    name: '総務チーム',
-    description:
-      '社内の施設管理、備品管理、オフィス環境に関するお問い合わせを承ります。',
-  },
-  {
-    id: '2',
-    name: '人事チーム',
-    description:
-      '勤怠管理、給与、福利厚生、人事評価、採用に関するご質問にお答えします。人事制度や社内規程についてもご相談いただけます。',
-  },
-  {
-    id: '3',
-    name: '経理チーム',
-    description:
-      '経費精算、請求書処理、予算管理、会計処理に関するサポートを提供します。',
-  },
-  {
-    id: '4',
-    name: 'ITサポートチーム',
-    description:
-      'PC、ネットワーク、社内システム、ソフトウェアライセンスなど、IT関連全般のトラブルシューティングとサポートを行います。アカウント管理やセキュリティに関する問い合わせもお受けします。',
-  },
-  {
-    id: '5',
-    name: '法務チーム',
-    description:
-      '契約書のレビュー、法的相談、コンプライアンス関連のご質問に対応します。',
-  },
-];
-
 /**
  * 有人窓口サイドバーコンポーネント
  */
-export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
-  const [selectedContact, setSelectedContact] = useState<SupportContact | null>(
-    null
-  );
+export default function SupportSidebar({
+  open,
+  onClose,
+  mannedCounterInfo,
+  chatHistory,
+  businessSubCategories,
+}: SupportSidebarProps) {
+  const { user, employeeInfo } = useUserContext();
+  const [selectedContact, setSelectedContact] =
+    useState<MannedCounterInfo | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<InquiryFormData>({
     message: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sentText, setSentText] = useState<string>('');
 
   // サイドバーを閉じる時にリセット
   const handleClose = () => {
@@ -95,13 +76,17 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
     setFormData({
       message: '',
     });
+    setIsSubmitting(false);
+    setError(null);
+    setSentText('');
     onClose();
   };
 
   // チームカードをクリック
-  const handleContactClick = (contact: SupportContact) => {
+  const handleContactClick = (contact: MannedCounterInfo) => {
     setSelectedContact(contact);
     setActiveStep(0);
+    setError(null);
   };
 
   // 一覧に戻る
@@ -129,10 +114,57 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
   };
 
   // 送信処理
-  const handleSubmit = () => {
-    // TODO: 実際の送信処理を実装
-    console.log('問い合わせ送信:', formData, selectedContact);
-    handleNext();
+  const handleSubmit = async () => {
+    if (!selectedContact || !user || !employeeInfo) {
+      setError('必要な情報が不足しています');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // チャット履歴をメール本文に整形
+      const chatHistoryText = chatHistory
+        .map(msg => `[${msg.role === 'user' ? 'ユーザー' : 'アシスタント'}]\n${msg.content}`)
+        .join('\n\n');
+
+      const mailContent = `【お問い合わせ内容】\n${formData.message}\n\n【チャット履歴】\n${chatHistoryText}`;
+
+      // SendMailRequestを構築
+      const requestBody: SendMailRequest = {
+        questioner_email: user.unique_name,
+        business_sub_category: selectedContact.business_sub_category,
+        company_cd: employeeInfo.company_code,
+        office_cd: employeeInfo.office_code,
+        mail_content: mailContent,
+        manned_counter_email: selectedContact.manned_counter_email || '',
+        is_office_access_only: selectedContact.is_office_access_only || false,
+      };
+
+      const response = await fetch('/chatbot/api/send-mail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error('メール送信に失敗しました');
+      }
+
+      const result = (await response.json()) as SendMailResponse;
+      setSentText(result.sent_text);
+      handleNext();
+    } catch (err) {
+      console.error('Error sending mail:', err);
+      setError(
+        err instanceof Error ? err.message : 'メール送信中にエラーが発生しました'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -163,7 +195,7 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 {selectedContact
-                  ? `${selectedContact.name}への問い合わせ`
+                  ? `${selectedContact.manned_counter_name || selectedContact.business_sub_category}への問い合わせ`
                   : 'このチャットに関する有人窓口'}
               </Typography>
               {!selectedContact && (
@@ -206,47 +238,63 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
           {!selectedContact ? (
             // 問い合わせ先一覧
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {supportContacts.map(contact => (
-                <Card
-                  key={contact.id}
-                  onClick={() => handleContactClick(contact)}
-                  sx={{
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: 'rgba(110, 65, 255, 0.05)',
-                      borderColor: '#6E41FF',
-                    },
-                  }}
-                  variant="outlined"
-                >
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, mb: 1 }}
-                    >
-                      {contact.name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {contact.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
+              {mannedCounterInfo.length === 0 ? (
+                <Alert severity="info">
+                  利用可能な有人窓口がありません。
+                </Alert>
+              ) : (
+                mannedCounterInfo.map((contact, index) => (
+                  <Card
+                    key={`${contact.business_sub_category}-${index}`}
+                    onClick={() => handleContactClick(contact)}
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: 'rgba(110, 65, 255, 0.05)',
+                        borderColor: '#6E41FF',
+                      },
+                    }}
+                    variant="outlined"
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, mb: 1 }}
+                      >
+                        {contact.manned_counter_name ||
+                          contact.business_sub_category}
+                      </Typography>
+                      {contact.manned_counter_description && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {contact.manned_counter_description}
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </Box>
           ) : (
             // 問い合わせフォーム
             <Box>
+              {/* エラー表示 */}
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+
               {/* ステッパー */}
               <Stepper
                 activeStep={activeStep}
@@ -382,10 +430,12 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
                       お問い合わせが完了しました
                     </Typography>
                   </Box>
-                  <Typography variant="body2" sx={{ color: '#2e7d32' }}>
-                    担当者からメール等でご連絡いたします。
-                    <br />
-                    ◯日以上連絡がない場合、再度お問い合わせください。
+                  <Typography
+                    variant="body2"
+                    sx={{ color: '#2e7d32', whiteSpace: 'pre-line' }}
+                  >
+                    {sentText ||
+                      '担当者からメール等でご連絡いたします。\n◯日以上連絡がない場合、再度お問い合わせください。'}
                   </Typography>
                 </Box>
               )}
@@ -425,13 +475,20 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
             )}
             {activeStep === 1 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Button startIcon={<ChevronLeftIcon />} onClick={handleBack}>
+                <Button
+                  startIcon={<ChevronLeftIcon />}
+                  onClick={handleBack}
+                  disabled={isSubmitting}
+                >
                   戻る
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<SendIcon />}
+                  startIcon={
+                    isSubmitting ? <CircularProgress size={20} /> : <SendIcon />
+                  }
                   onClick={handleSubmit}
+                  disabled={isSubmitting}
                   sx={{
                     bgcolor: '#6E41FF',
                     '&:hover': {
@@ -439,7 +496,7 @@ export default function SupportSidebar({ open, onClose }: SupportSidebarProps) {
                     },
                   }}
                 >
-                  送信
+                  {isSubmitting ? '送信中...' : '送信'}
                 </Button>
               </Box>
             )}
