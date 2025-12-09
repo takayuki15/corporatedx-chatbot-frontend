@@ -44,6 +44,23 @@ export interface Employee {
 }
 
 /**
+ * EmployeeResponse型
+ * バックエンドAPIから返される従業員情報のレスポンス構造
+ */
+export interface EmployeeResponse {
+  employee: Employee;
+}
+
+/**
+ * EmployeeApiResponse型
+ * バックエンドAPIの生レスポンス（bodyがJSON文字列）
+ */
+export interface EmployeeApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列: {"employee": {...}}
+}
+
+/**
  * RAG API Types
  */
 

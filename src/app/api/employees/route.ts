@@ -1,4 +1,8 @@
-import type { Employee, ErrorResponse } from '@/lib/api';
+import type {
+  EmployeeApiResponse,
+  EmployeeResponse,
+  ErrorResponse,
+} from '@/lib/api';
 import { apiClient } from '@/lib/api';
 import { useMockApi } from '@/lib/config';
 import { readFileSync } from 'fs';
@@ -9,7 +13,7 @@ import { join } from 'path';
  * GET /api/employees
  * 従業員情報を取得
  * - モックモード: mocks/employee.json から従業員情報を取得
- * - 本番モード: バックエンドAPI /v1/get_employee から従業員情報を取得
+ * - 本番モード: バックエンドAPI /v1/employee から従業員情報を取得
  *
  * クエリパラメータ:
  * - MIAMID: 従業員のMIAMID (必須)
@@ -38,16 +42,19 @@ export async function GET(request: NextRequest) {
       );
       const employeeData = JSON.parse(
         readFileSync(employeeJsonPath, 'utf-8')
-      ) as Employee;
+      ) as EmployeeResponse;
       return NextResponse.json(employeeData, { status: 200 });
     }
 
     // 本番モードの場合
-    const response = await apiClient.get<Employee>('/v1/get_employee', {
+    const response = await apiClient.get<EmployeeApiResponse>('/v1/employee', {
       MIAMID: miamid,
     });
 
-    return NextResponse.json(response as Employee, { status: 200 });
+    // bodyをパースして {"employee": {...}} 構造を取得
+    const parsedBody: EmployeeResponse = JSON.parse(response.body);
+
+    return NextResponse.json(parsedBody, { status: 200 });
   } catch (error) {
     console.error('Error fetching employee:', error);
     console.error('Error details:', {

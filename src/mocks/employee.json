@@ -1,11 +1,11 @@
 {
   "employee": {
-    "name": "User",
-    "company": "株式会社Example",
-    "department": "開発部",
+    "name": "testuser",
     "displayName": "山田 太郎",
-    "lastLogonTimestamp": "2025-01-01T12:00:00Z",
-    "mail": "user@example.com",
-    "office": "東京オフィス"
+    "company": "株式会社村田製作所",
+    "company_code": "Japan",
+    "office_code": "東京オフィス",
+    "department": "開発部",
+    "mail": "testuser@example.com"
   }
 }

@@ -8,6 +8,8 @@ export type {
   ApiResponse,
   ChatMessage,
   Employee,
+  EmployeeApiResponse,
+  EmployeeResponse,
   ErrorResponse,
   FaqAndRagResponse,
   FaqOnlyResponse,
