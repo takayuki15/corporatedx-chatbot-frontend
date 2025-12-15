@@ -90,7 +90,7 @@ export default function SupportSidebar({
           office: employeeInfo.office_code,
         };
 
-        const response = await fetch('/chatbot/api/get_manned_counter', {
+        const response = await fetch('/chatbot/api/manned-counters', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

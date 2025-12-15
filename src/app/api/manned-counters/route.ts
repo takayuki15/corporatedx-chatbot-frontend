@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
 
 /**
- * POST /api/get_manned_counter
+ * POST /api/manned-counters
  * 有人窓口情報取得API
  * - モックモード: mocks/getMannedCounter.json からレスポンスを取得
  * - 本番モード: バックエンドAPI /v1/get_manned_counter にリクエストを送信
@@ -24,7 +24,7 @@ import { join } from 'path';
  * }
  *
  * 例:
- * POST /api/get_manned_counter
+ * POST /api/manned-counters
  * {
  *   "priority_manned_counter_names": ["経理窓口", "総務課"],
  *   "company": "MMC",

@@ -53,7 +53,7 @@ export function useRagChat() {
           ...options,
         };
 
-        const response = await fetch('/chatbot/api/automated_answer/', {
+        const response = await fetch('/chatbot/api/answer/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

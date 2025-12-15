@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
 
 /**
- * POST /api/automated_answer
+ * POST /api/answer
  * RAG自動回答システムAPI
  * - モックモード: mocks/ragFaqAndRag.json からレスポンスを取得
  * - 本番モード: バックエンドAPI /v1/automated_answer にリクエストを送信
@@ -28,7 +28,7 @@ import { join } from 'path';
  * }
  *
  * 例:
- * POST /api/automated_answer
+ * POST /api/answer
  * {
  *   "query": "経費精算の期限はいつですか？",
  *   "company": "MMC",
