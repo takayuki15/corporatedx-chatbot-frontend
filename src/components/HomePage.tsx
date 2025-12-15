@@ -209,6 +209,7 @@ export default function HomePage() {
               title={getChatTitle()}
               onDelete={handleDeleteChat}
               onSupport={handleSupport}
+              sidebarOpen={sidebarOpen}
             />
           )}
 

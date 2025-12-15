@@ -7,19 +7,21 @@ interface ChatHeaderProps {
   title: string;
   onDelete?: () => void;
   onSupport?: () => void;
+  sidebarOpen?: boolean;
 }
 
 /**
  * チャットヘッダーコンポーネント
  */
-export default function ChatHeader({ title, onDelete, onSupport }: ChatHeaderProps) {
+export default function ChatHeader({ title, onDelete, onSupport, sidebarOpen = true }: ChatHeaderProps) {
   return (
     <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        px: 4,
+        pl: sidebarOpen ? 4 : 8,
+        pr: 4,
         py: 2,
         borderBottom: 1,
         borderColor: 'divider',
