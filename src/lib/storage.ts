@@ -93,7 +93,7 @@ export function getSessionLastUpdate(sessionId: string): Date | null {
 }
 
 /**
- * Employee情報（company_code, office_code）の保存・取得
+ * Employee情報（company, office）の保存・取得
  */
 
 const EMPLOYEE_INFO_KEY = 'employee_info';

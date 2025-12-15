@@ -93,25 +93,34 @@ export interface LlmParams {
 export interface RagRequest {
   // 必須パラメータ
   query: string;
-  company_code: string;
-  office_code: string;
+  company: string;
+  office: string;
+  miam_id: string;
 
   // オプションパラメータ
   session_id?: string;
-  model_name?: string;
   language?: string;
-  retrieval_mode?: 'hybrid' | 'bm25' | 'cos_sim';
-  top_n?: number;
-  rrf_k?: number;
+  business_sub_category_top_n?: number;
+  business_sub_category_query_expansion_model?: string;
+  business_sub_category_retrieval_mode?: 'hybrid' | 'bm25' | 'cos_sim';
+  business_sub_category_retrieval_model?: string | null;
+  business_sub_category_rerank_model?: string;
+  answer_top_n?: number;
+  answer_query_expansion_model?: string;
+  answer_model?: string;
+  answer_retrieval_mode?: 'hybrid' | 'bm25' | 'cos_sim';
+  answer_retrieval_model?: string | null;
+  answer_rerank_model?: string;
   is_query_expansion?: boolean;
-  rerank_model_type?: 'aoai' | 'bedrock';
-  bedrock_model_name?: string;
+  is_rerank?: boolean;
   system_message?: string | null;
+  rrf_k?: number;
   llm_params?: LlmParams;
 }
 
 /**
- * 有人窓口情報
+ * 有人窓口情報（従来のDynamoDB構造、削除予定）
+ * @deprecated 新しいAPIでは priority_manned_counter_names を使用
  */
 export interface MannedCounterInfo {
   business_sub_category: string;
@@ -150,7 +159,7 @@ interface RagResponseBase {
   session_id: string;
   chat_history: ChatMessage[];
   business_sub_categories: string[];
-  manned_counter_info: MannedCounterInfo[];
+  priority_manned_counter_names: string[];
 }
 
 /**

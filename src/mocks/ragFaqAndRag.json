@@ -13,22 +13,7 @@
       }
     ],
     "business_sub_categories": ["経理", "総務"],
-    "manned_counter_info": [
-      {
-        "business_sub_category": "経理",
-        "manned_counter_name": "経理窓口",
-        "manned_counter_email": "keiri@example.com",
-        "manned_counter_description": "経費精算・給与に関するお問い合わせ",
-        "is_office_access_only": false
-      },
-      {
-        "business_sub_category": "総務",
-        "manned_counter_name": "総務課",
-        "manned_counter_email": "soumu@example.com",
-        "manned_counter_description": "総務全般に関するお問い合わせ",
-        "is_office_access_only": false
-      }
-    ],
+    "priority_manned_counter_names": ["経理窓口", "総務課"],
     "faq": {
       "answer": [
         "経費精算の期限は毎月末日です。",

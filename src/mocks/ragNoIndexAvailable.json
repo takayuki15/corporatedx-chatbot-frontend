@@ -13,6 +13,7 @@
       }
     ],
     "business_sub_categories": ["機密管理"],
+    "priority_manned_counter_names": ["情報管理窓口"],
     "message": "頂いたご質問に関する情報については、回答できませんでした。なお、この質問につきましては、管理者により回答が差し控えられている可能性がございます。詳しくは、有人窓口へお問い合わせください。",
     "no_index_available": true
   }

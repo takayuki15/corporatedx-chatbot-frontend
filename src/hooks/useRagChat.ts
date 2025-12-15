@@ -38,19 +38,22 @@ export function useRagChat() {
       }));
 
       try {
-        // TODO: 実際の会社コードと事業所コードを取得
+        // 必須パラメータのチェック
+        if (!options?.company || !options?.office || !options?.miam_id) {
+          throw new Error('company, office, and miam_id are required');
+        }
+
         const requestBody: RagRequest = {
           query,
-          company_code: options?.company_code || 'MMC',
-          office_code: options?.office_code || 'MM00',
+          company: options.company,
+          office: options.office,
+          miam_id: options.miam_id,
           session_id: state.sessionId || undefined,
           language: options?.language || 'ja',
-          retrieval_mode: options?.retrieval_mode || 'hybrid',
-          top_n: options?.top_n || 5,
           ...options,
         };
 
-        const response = await fetch('/chatbot/api/rag/', {
+        const response = await fetch('/chatbot/api/automated_answer/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

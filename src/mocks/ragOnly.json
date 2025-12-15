@@ -9,30 +9,33 @@
       },
       {
         "role": "assistant",
-        "content": "有給休暇の申請は、社内システムから申請フォームを提出してください。取得希望日の3営業日前までに申請が必要です。"
+        "content": "有給休暇の申請は、社内システムから申請フォームを提出してください。取得希望日の3営業日前までに申請が必要です。申請フォームには、取得理由と連絡先を記入してください。承認後、人事部から確認メールが送信されます。"
       }
     ],
     "business_sub_categories": ["人事"],
-    "rag_answer": "有給休暇の申請は、社内システムから申請フォームを提出してください。取得希望日の3営業日前までに申請が必要です。申請フォームには、取得理由と連絡先を記入してください。承認後、人事部から確認メールが送信されます。",
-    "rag_source_files": [
-      "hr_guide.pdf",
-      "employee_handbook.pdf",
-      "leave_policy.docx"
-    ],
-    "rag_chunk_ids": [
-      "chunk_id_101",
-      "chunk_id_102",
-      "chunk_id_103"
-    ],
-    "rag_source_texts": [
-      "第5章 有給休暇\n5.1 申請方法\n有給休暇の申請は社内システムから申請フォームを提出してください...",
-      "申請締め切り\n有給休暇は取得希望日の3営業日前までに申請する必要があります...",
-      "人事部問い合わせ先\n人事部: hr@example.com\n内線: 1234"
-    ],
-    "rag_metadata_list": [
-      "{\"business_sub_category\": \"人事\", \"document_type\": \"ガイド\"}",
-      "{\"business_sub_category\": \"人事\", \"document_type\": \"規程\"}",
-      "{\"business_sub_category\": \"人事\", \"document_type\": \"ポリシー\"}"
-    ]
+    "priority_manned_counter_names": ["人事部"],
+    "rag": {
+      "answer": "有給休暇の申請は、社内システムから申請フォームを提出してください。取得希望日の3営業日前までに申請が必要です。申請フォームには、取得理由と連絡先を記入してください。承認後、人事部から確認メールが送信されます。",
+      "source_files": [
+        "hr_guide.pdf",
+        "employee_handbook.pdf",
+        "leave_policy.docx"
+      ],
+      "chunk_ids": [
+        "chunk_id_101",
+        "chunk_id_102",
+        "chunk_id_103"
+      ],
+      "source_texts": [
+        "第5章 有給休暇\n5.1 申請方法\n有給休暇の申請は社内システムから申請フォームを提出してください...",
+        "申請締め切り\n有給休暇は取得希望日の3営業日前までに申請する必要があります...",
+        "人事部問い合わせ先\n人事部: hr@example.com\n内線: 1234"
+      ],
+      "metadata_list": [
+        "{\"business_sub_category\": \"人事\", \"document_type\": \"ガイド\"}",
+        "{\"business_sub_category\": \"人事\", \"document_type\": \"規程\"}",
+        "{\"business_sub_category\": \"人事\", \"document_type\": \"ポリシー\"}"
+      ]
+    }
   }
 }

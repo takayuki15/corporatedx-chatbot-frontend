@@ -9,29 +9,32 @@
       },
       {
         "role": "assistant",
-        "content": "経費精算の期限は毎月末日です。"
+        "content": ""
       }
     ],
     "business_sub_categories": ["経理"],
-    "faq_answer": [
-      "経費精算の期限は毎月末日です。",
-      "交通費の精算は翌月10日までに提出してください。"
-    ],
-    "faq_source_files": [
-      "FAQ-001.md",
-      "FAQ-002.md"
-    ],
-    "faq_chunk_ids": [
-      "chunk_id_001",
-      "chunk_id_002"
-    ],
-    "faq_source_texts": [
-      "Q: 経費精算の期限は？\nA: 経費精算の期限は毎月末日です。領収書は必ず原本を添付してください。",
-      "Q: 交通費精算は？\nA: 交通費の精算は翌月10日までに提出してください。ICカードの履歴を添付してください。"
-    ],
-    "faq_metadata_list": [
-      "{\"business_sub_category\": \"経理\", \"office_codes\": [\"MM00\"]}",
-      "{\"business_sub_category\": \"経理\", \"office_codes\": [\"all\"]}"
-    ]
+    "priority_manned_counter_names": ["経理窓口"],
+    "faq": {
+      "answer": [
+        "経費精算の期限は毎月末日です。",
+        "交通費の精算は翌月10日までに提出してください。"
+      ],
+      "source_files": [
+        "FAQ-001.md",
+        "FAQ-002.md"
+      ],
+      "chunk_ids": [
+        "chunk_id_001",
+        "chunk_id_002"
+      ],
+      "source_texts": [
+        "Q: 経費精算の期限は？\nA: 経費精算の期限は毎月末日です。領収書は必ず原本を添付してください。",
+        "Q: 交通費精算は？\nA: 交通費の精算は翌月10日までに提出してください。ICカードの履歴を添付してください。"
+      ],
+      "metadata_list": [
+        "{\"business_sub_category\": \"経理\", \"office_codes\": [\"MM00\"]}",
+        "{\"business_sub_category\": \"経理\", \"office_codes\": [\"all\"]}"
+      ]
+    }
   }
 }

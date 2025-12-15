@@ -15,7 +15,7 @@
 ```json
 {
   "httpMethod": "POST",
-  "path": "/rag",
+  "path": "/automated_answer",
   "headers": {
     "Content-Type": "application/json",
     "x-apigw-api-id": "YOUR_API_GATEWAY_ID"

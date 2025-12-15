@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
 
 /**
- * POST /api/rag
+ * POST /api/automated_answer
  * RAG自動回答システムAPI
  * - モックモード: mocks/ragFaqAndRag.json からレスポンスを取得
  * - 本番モード: バックエンドAPI /v1/automated_answer にリクエストを送信
@@ -19,19 +19,21 @@ import { join } from 'path';
  * リクエストボディ:
  * {
  *   "query": "ユーザーの質問内容",
- *   "company_code": "会社コード",
- *   "office_code": "事業所コード",
+ *   "company": "会社コード",
+ *   "office": "事業所コード",
+ *   "miam_id": "MIAMID（メールアドレス形式）",
  *   "session_id": "セッションID (オプション)",
  *   "language": "言語 (オプション)",
  *   ... その他のオプションパラメータ
  * }
  *
  * 例:
- * POST /api/rag
+ * POST /api/automated_answer
  * {
  *   "query": "経費精算の期限はいつですか？",
- *   "company_code": "MMC",
- *   "office_code": "MM00",
+ *   "company": "MMC",
+ *   "office": "MM00",
+ *   "miam_id": "user@example.com",
  *   "language": "ja"
  * }
  */
@@ -48,31 +50,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!body.company_code || typeof body.company_code !== 'string') {
+    if (!body.company || typeof body.company !== 'string') {
       return NextResponse.json(
-        { error: 'company_code is required and must be a string' },
+        { error: 'company is required and must be a string' },
         { status: 400 }
       );
     }
 
-    if (!body.office_code || typeof body.office_code !== 'string') {
+    if (!body.office || typeof body.office !== 'string') {
       return NextResponse.json(
-        { error: 'office_code is required and must be a string' },
+        { error: 'office is required and must be a string' },
+        { status: 400 }
+      );
+    }
+
+    if (!body.miam_id || typeof body.miam_id !== 'string' || body.miam_id.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'miam_id is required and must be a non-empty string' },
         { status: 400 }
       );
     }
 
     // オプションパラメータのバリデーション
-    if (body.retrieval_mode && !['hybrid', 'bm25', 'cos_sim'].includes(body.retrieval_mode)) {
+    if (
+      body.business_sub_category_retrieval_mode &&
+      !['hybrid', 'bm25', 'cos_sim'].includes(body.business_sub_category_retrieval_mode)
+    ) {
       return NextResponse.json(
-        { error: 'retrieval_mode must be one of: hybrid, bm25, cos_sim' },
+        { error: 'business_sub_category_retrieval_mode must be one of: hybrid, bm25, cos_sim' },
         { status: 400 }
       );
     }
 
-    if (body.top_n !== undefined && (body.top_n < 1 || body.top_n > 100)) {
+    if (
+      body.answer_retrieval_mode &&
+      !['hybrid', 'bm25', 'cos_sim'].includes(body.answer_retrieval_mode)
+    ) {
       return NextResponse.json(
-        { error: 'top_n must be between 1 and 100' },
+        { error: 'answer_retrieval_mode must be one of: hybrid, bm25, cos_sim' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      body.business_sub_category_top_n !== undefined &&
+      (body.business_sub_category_top_n < 1 || body.business_sub_category_top_n > 100)
+    ) {
+      return NextResponse.json(
+        { error: 'business_sub_category_top_n must be between 1 and 100' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      body.answer_top_n !== undefined &&
+      (body.answer_top_n < 1 || body.answer_top_n > 100)
+    ) {
+      return NextResponse.json(
+        { error: 'answer_top_n must be between 1 and 100' },
         { status: 400 }
       );
     }
@@ -80,13 +115,6 @@ export async function POST(request: NextRequest) {
     if (body.rrf_k !== undefined && body.rrf_k < 1) {
       return NextResponse.json(
         { error: 'rrf_k must be greater than or equal to 1' },
-        { status: 400 }
-      );
-    }
-
-    if (body.rerank_model_type && !['aoai', 'bedrock'].includes(body.rerank_model_type)) {
-      return NextResponse.json(
-        { error: 'rerank_model_type must be one of: aoai, bedrock' },
         { status: 400 }
       );
     }
@@ -162,7 +190,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(parsedBody, { status: 200 });
   } catch (error) {
-    console.error('Error in RAG API:', error);
+    console.error('Error in automated_answer API:', error);
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
