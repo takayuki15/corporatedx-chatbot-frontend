@@ -226,9 +226,9 @@ export interface MailFile {
  */
 export interface SendMailRequest {
   questioner_email: string;
-  business_sub_category: string;
-  company_cd: string;
-  office_cd: string;
+  manned_counter_name: string;
+  company: string;
+  office: string;
   mail_content: string;
   manned_counter_email: string;
   is_office_access_only: boolean;

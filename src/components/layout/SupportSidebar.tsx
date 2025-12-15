@@ -179,15 +179,12 @@ export default function SupportSidebar({
 
       const mailContent = `【お問い合わせ内容】\n${formData.message}\n\n【チャット履歴】\n${chatHistoryText}`;
 
-      // business_sub_categoryを取得（最初のカテゴリを使用）
-      const businessSubCategory = businessSubCategories[0] || '';
-
       // SendMailRequestを構築
       const requestBody: SendMailRequest = {
         questioner_email: user.unique_name,
-        business_sub_category: businessSubCategory,
-        company_cd: employeeInfo.company_code,
-        office_cd: employeeInfo.office_code,
+        manned_counter_name: selectedContact.manned_counter_name || '',
+        company: employeeInfo.company_code,
+        office: employeeInfo.office_code,
         mail_content: mailContent,
         manned_counter_email: selectedContact.manned_counter_email || '',
         is_office_access_only: false, // デフォルト値

@@ -14,14 +14,14 @@ import { join } from 'path';
  * POST /api/send-mail
  * SESメール送信API
  * - モックモード: mocks/sendMail.json からレスポンスを取得
- * - 本番モード: バックエンドAPI /v1/send-mail にリクエストを送信
+ * - 本番モード: バックエンドAPI /v1/send_ses2mail_dealer にリクエストを送信
  *
  * リクエストボディ:
  * {
  *   "questioner_email": "問い合わせ者のメールアドレス",
- *   "business_sub_category": "業務小分類",
- *   "company_cd": "会社コード",
- *   "office_cd": "事業所コード",
+ *   "manned_counter_name": "有人窓口名",
+ *   "company": "会社コード",
+ *   "office": "事業所コード",
  *   "mail_content": "メール本文",
  *   "manned_counter_email": "有人窓口のメールアドレス",
  *   "is_office_access_only": true/false,
@@ -32,9 +32,9 @@ import { join } from 'path';
  * POST /api/send-mail
  * {
  *   "questioner_email": "user@example.com",
- *   "business_sub_category": "経費精算",
- *   "company_cd": "ALLJPN",
- *   "office_cd": "MM00",
+ *   "manned_counter_name": "経費精算",
+ *   "company": "ALLJPN",
+ *   "office": "MM00",
  *   "mail_content": "経費精算の期限について教えてください。",
  *   "manned_counter_email": "expenses@example.com",
  *   "is_office_access_only": true
@@ -54,25 +54,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !body.business_sub_category ||
-      typeof body.business_sub_category !== 'string'
+      !body.manned_counter_name ||
+      typeof body.manned_counter_name !== 'string'
     ) {
       return NextResponse.json(
-        { error: 'business_sub_category is required and must be a string' },
+        { error: 'manned_counter_name is required and must be a string' },
         { status: 400 }
       );
     }
 
-    if (!body.company_cd || typeof body.company_cd !== 'string') {
+    if (!body.company || typeof body.company !== 'string') {
       return NextResponse.json(
-        { error: 'company_cd is required and must be a string' },
+        { error: 'company is required and must be a string' },
         { status: 400 }
       );
     }
 
-    if (!body.office_cd || typeof body.office_cd !== 'string') {
+    if (!body.office || typeof body.office !== 'string') {
       return NextResponse.json(
-        { error: 'office_cd is required and must be a string' },
+        { error: 'office is required and must be a string' },
         { status: 400 }
       );
     }
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     // 本番モードの場合
     const response = await apiClient.post<SendMailApiResponse>(
-      '/v1/send-mail',
+      '/v1/send_ses2mail_dealer',
       body
     );
 
