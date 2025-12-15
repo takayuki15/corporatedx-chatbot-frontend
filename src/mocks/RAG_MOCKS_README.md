@@ -60,7 +60,7 @@ FAQとRAGの両方が有効で、両方の結果がある場合。
 
 ### Next.js API Route での使用
 
-`src/app/api/employees/route.ts` の実装パターンに従い、JSONファイルを直接読み込みます。
+`src/app/api/employee/route.ts` の実装パターンに従い、JSONファイルを直接読み込みます。
 
 ```typescript
 import { readFileSync } from 'fs';

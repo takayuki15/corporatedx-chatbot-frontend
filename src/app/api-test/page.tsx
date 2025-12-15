@@ -28,7 +28,7 @@ export default function ApiTestPage() {
 
     try {
       const response = await fetch(
-        `/chatbot/api/employees?MIAMID=${encodeURIComponent(miamid)}`
+        `/chatbot/api/employee?MIAMID=${encodeURIComponent(miamid)}`
       );
       const data = await response.json();
 
@@ -60,10 +60,10 @@ export default function ApiTestPage() {
         </Alert>
       </Box>
 
-      {/* Employees API Test */}
+      {/* Employee API Test */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" gutterBottom>
-          Employees API Test
+          Employee API Test
         </Typography>
         <Paper sx={{ p: 3, mb: 3 }}>
           <Stack spacing={2}>

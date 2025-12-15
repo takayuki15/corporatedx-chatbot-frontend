@@ -68,7 +68,7 @@ export function UserProvider({ children }: UserProviderProps) {
       if (!cachedEmployeeInfo && userData.unique_name) {
         try {
           const employeeResponse = await fetch(
-            `/chatbot/api/employees?MIAMID=${encodeURIComponent(userData.unique_name)}`
+            `/chatbot/api/employee?MIAMID=${encodeURIComponent(userData.unique_name)}`
           );
 
           if (employeeResponse.ok) {

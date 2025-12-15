@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
 
 /**
- * GET /api/employees
+ * GET /api/employee
  * 従業員情報を取得
  * - モックモード: mocks/employee.json から従業員情報を取得
  * - 本番モード: バックエンドAPI /v1/employee から従業員情報を取得
@@ -18,7 +18,7 @@ import { join } from 'path';
  * クエリパラメータ:
  * - MIAMID: 従業員のMIAMID (必須)
  *
- * 例: GET /api/employees?MIAMID=testuser@example.com
+ * 例: GET /api/employee?MIAMID=testuser@example.com
  */
 export async function GET(request: NextRequest) {
   try {
