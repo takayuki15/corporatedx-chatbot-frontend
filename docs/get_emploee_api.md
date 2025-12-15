@@ -2,9 +2,9 @@
 
 ## 概要
 
-`src/get_employee/handler.py` のLambda関数は、MIAMIDを受け取り、DynamoDBから対応する社員情報を取得して返します。
+`src/get_employee/handler.py` のLambda関数は、miam_idを受け取り、DynamoDBから対応する社員情報を取得して返します。
 
-**エンドポイント:** `/v1/employee` (GET/POST)
+**エンドポイント:** `/v1/get_employee` (GET/POST)
 
 ---
 
@@ -15,7 +15,8 @@
 #### GETメソッド（推奨）
 
 ```http
-GET /v1/employee?MIAMID=user@example.com HTTP/1.1
+GET /v1/get_employee?miam_id=user@example.com HTTP/1.1
+x-apigw-api-id: qsenl832o9
 Content-Type: application/json
 ```
 
@@ -24,12 +25,13 @@ Content-Type: application/json
 ```json
 {
   "httpMethod": "POST",
-  "path": "/employee",
+  "path": "/get_employee",
   "headers": {
+    "x-apigw-api-id": "qsenl832o9",
     "Content-Type": "application/json"
   },
   "body": {
-    "MIAMID": "user@example.com"
+    "miam_id": "user@example.com"
   }
 }
 ```
@@ -38,13 +40,13 @@ Content-Type: application/json
 
 #### 必須パラメータ
 
-| パラメータ | 型       | 説明                                   | 例                       |
-| ---------- | -------- | -------------------------------------- | ------------------------ |
-| `MIAMID`   | `string` | ユーザーのMIAMID（メールアドレス形式） | `"testuser@example.com"` |
+| パラメータ | 型       | 説明                                    | 例                       |
+| ---------- | -------- | --------------------------------------- | ------------------------ |
+| `miam_id`  | `string` | ユーザーのMIAM ID（メールアドレス形式） | `"testuser@example.com"` |
 
 **注意:**
 
-- MIAMIDは必ず `@` を含むメールアドレス形式である必要があります
+- miam_idは必ず `@` を含むメールアドレス形式である必要があります
 - `@` 以前の文字列がDynamoDBの検索キー（`name`）として使用されます
 
 ---
@@ -54,7 +56,8 @@ Content-Type: application/json
 ### GETメソッド
 
 ```http
-GET /v1/employee?MIAMID=testuser@example.com HTTP/1.1
+GET /v1/get_employee?miam_id=testuser@example.com HTTP/1.1
+x-apigw-api-id: qsenl832o9
 Content-Type: application/json
 ```
 
@@ -62,7 +65,7 @@ Content-Type: application/json
 
 ```json
 {
-  "MIAMID": "testuser@example.com"
+  "miam_id": "testuser@example.com"
 }
 ```
 
@@ -71,11 +74,12 @@ Content-Type: application/json
 ```json
 {
   "httpMethod": "POST",
-  "path": "/employee",
+  "path": "/get_employee",
   "headers": {
+    "x-apigw-api-id": "qsenl832o9",
     "Content-Type": "application/json"
   },
-  "body": "{\"MIAMID\": \"testuser@example.com\"}"
+  "body": "{\"miam_id\": \"testuser@example.com\"}"
 }
 ```
 
@@ -123,15 +127,15 @@ Content-Type: application/json
 }
 ```
 
-| フィールド    | 型       | 説明                                 | 例                       |
-| ------------- | -------- | ------------------------------------ | ------------------------ |
-| `name`        | `string` | ユーザー名（MIAMID の @ 以前の部分） | `"testuser"`             |
-| `displayName` | `string` | 表示名                               | `"Test User"`            |
-| `company`     | `string` | 所属会社名                           | `"Test Company"`         |
-| `co`          | `string` | 国コード                             | `"Japan"`                |
-| `office`      | `string` | 事業所名                             | `"Tokyo Office"`         |
-| `department`  | `string` | 部署名                               | `"Engineering"`          |
-| `mail`        | `string` | メールアドレス                       | `"testuser@example.com"` |
+| フィールド    | 型       | 説明                               | 例                       |
+| ------------- | -------- | ---------------------------------- | ------------------------ |
+| `name`        | `string` | ユーザー名（mail の @ 以前の部分） | `"testuser"`             |
+| `displayName` | `string` | 表示名                             | `"Test User"`            |
+| `company`     | `string` | 所属会社名                         | `"Test Company"`         |
+| `co`          | `string` | 国コード                           | `"Japan"`                |
+| `office`      | `string` | 事業所名                           | `"Tokyo Office"`         |
+| `department`  | `string` | 部署名                             | `"Engineering"`          |
+| `mail`        | `string` | メールアドレス                     | `"testuser@example.com"` |
 
 **注意:** DynamoDBに格納されている全てのフィールドが返されます。上記は一般的なフィールドの例です。
 
@@ -153,21 +157,21 @@ Content-Type: application/json
 
 ### エラーレスポンス
 
-#### 400 Bad Request: MIAMIDが含まれていない
+#### 400 Bad Request: miam_idが含まれていない
 
 ```json
 {
   "statusCode": 400,
-  "body": "{\"error\": \"リクエストに MIAMID が含まれていません\"}"
+  "body": "{\"error\": \"リクエストに miam_id が含まれていません\"}"
 }
 ```
 
-#### 400 Bad Request: MIAMID形式が不正
+#### 400 Bad Request: miam_id形式が不正
 
 ```json
 {
   "statusCode": 400,
-  "body": "{\"error\": \"MIAMID の形式が不正です。エラー内容: MIAMID に @ が含まれていません: invalidmiamid\"}"
+  "body": "{\"error\": \"miam_id の形式が不正です。エラー内容: miam_id に @ が含まれていません: invalidmiam_id\"}"
 }
 ```
 
@@ -193,11 +197,11 @@ Content-Type: application/json
 
 ## ステータスコード一覧
 
-| コード | 説明             | 発生条件                                 |
-| ------ | ---------------- | ---------------------------------------- |
-| `200`  | 成功             | 正常処理完了（社員情報あり/なし両方）    |
-| `400`  | リクエストエラー | MIAMID未指定、形式不正、JSONパースエラー |
-| `500`  | サーバーエラー   | DynamoDB接続エラー、予期せぬエラー       |
+| コード | 説明             | 発生条件                                  |
+| ------ | ---------------- | ----------------------------------------- |
+| `200`  | 成功             | 正常処理完了（社員情報あり/なし両方）     |
+| `400`  | リクエストエラー | miam_id未指定、形式不正、JSONパースエラー |
+| `500`  | サーバーエラー   | DynamoDB接続エラー、予期せぬエラー        |
 
 ---
 
@@ -206,11 +210,11 @@ Content-Type: application/json
 ### 処理フロー
 
 1. **リクエストパース**
-   - GETメソッドの場合: `queryStringParameters` から `MIAMID` を取得
-   - POSTメソッドの場合: `body` から `MIAMID` を取得
+   - GETメソッドの場合: `queryStringParameters` から `miam_id` を取得
+   - POSTメソッドの場合: `body` から `miam_id` を取得
 
-2. **MIAMID検証**
-   - MIAMIDに `@` が含まれているかチェック
+2. **miam_id検証**
+   - miam_idに `@` が含まれているかチェック
    - `@` 以前の文字列を抽出（例: `testuser@example.com` → `testuser`）
 
 3. **DynamoDB検索**
@@ -235,7 +239,7 @@ Content-Type: application/json
 
 #### 検索キーの抽出
 
-- MIAMIDから `@` 以前の文字列を抽出して検索キーとします
+- miam_idから `@` 以前の文字列を抽出して検索キーとします
 - 例:
   - `testuser@example.com` → 検索キー: `testuser`
   - `test.user@example.com` → 検索キー: `test.user`
@@ -261,7 +265,7 @@ Content-Type: application/json
 
 ### テーブル設計
 
-- **Partition Key**: `name` (String) - MIAMIDの @ 以前の文字列
+- **Partition Key**: `name` (String) - miam_idの @ 以前の文字列
 - **リージョン**: `ap-northeast-1`
 - **クエリ制限**: Limit 1（最初の1件のみ取得）
 
@@ -308,7 +312,7 @@ raise LambdaHandlerError(
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee?MIAMID=testuser@example.com" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee?miam_id=testuser@example.com" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X GET
@@ -340,12 +344,12 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
-    "MIAMID": "unknown@example.com"
+    "miam_id": "unknown@example.com"
   }'
 ```
 
@@ -372,7 +376,7 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee?MIAMID=ususer@example.com" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee?miam_id=ususer@example.com" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X GET
@@ -410,17 +414,17 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 
 ---
 
-### ケース4: MIAMID形式エラー
+### ケース4: mail形式エラー
 
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
-    "MIAMID": "invalidmiamid"
+    "mail": "invalidmiam_id"
   }'
 ```
 
@@ -430,23 +434,23 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 {
   "statusCode": 400,
   "body": {
-    "error": "MIAMID の形式が不正です。エラー内容: MIAMID に @ が含まれていません: invalidmiamid"
+    "error": "mail の形式が不正です。エラー内容: mail に @ が含まれていません: invalidmiam_id"
   }
 }
 ```
 
 **ポイント:**
 
-- MIAMIDは必ず `@` を含むメールアドレス形式である必要がある
+- mailは必ず `@` を含むメールアドレス形式である必要がある
 
 ---
 
-### ケース5: MIAMIDパラメータ未指定
+### ケース5: mailパラメータ未指定
 
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X GET
@@ -458,7 +462,7 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 {
   "statusCode": 400,
   "body": {
-    "error": "リクエストに MIAMID が含まれていません"
+    "error": "リクエストに mail が含まれていません"
   }
 }
 ```
@@ -473,15 +477,15 @@ import json
 
 # GETメソッド
 response = requests.get(
-    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee",
-    params={"MIAMID": "testuser@example.com"},
+    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee",
+    params={"mail": "testuser@example.com"},
     headers={"x-apigw-api-id": "qsenl832o9"}
 )
 
 # POSTメソッド
 response = requests.post(
-    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee",
-    json={"MIAMID": "testuser@example.com"},
+    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee",
+    json={"mail": "testuser@example.com"},
     headers={"x-apigw-api-id": "qsenl832o9"}
 )
 
@@ -502,7 +506,7 @@ else:
 ```javascript
 // GETメソッド
 const response = await fetch(
-  'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee?MIAMID=testuser@example.com',
+  'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee?mail=testuser@example.com',
   {
     method: 'GET',
     headers: {
@@ -514,14 +518,14 @@ const response = await fetch(
 
 // POSTメソッド
 const response = await fetch(
-  'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/employee',
+  'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/get_employee',
   {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-apigw-api-id': 'qsenl832o9',
     },
-    body: JSON.stringify({ MIAMID: 'testuser@example.com' }),
+    body: JSON.stringify({ mail: 'testuser@example.com' }),
   }
 );
 
@@ -537,37 +541,3 @@ if (Object.keys(employee).length > 0) {
   console.log('社員情報が見つかりませんでした');
 }
 ```
-
----
-
-## テスト
-
-### ユニットテスト実行
-
-```bash
-uv run pytest src/get_employee/test/test_handler.py -v
-```
-
-### カバレッジ確認
-
-```bash
-uv run pytest src/get_employee/test/test_handler.py --cov=src/get_employee --cov-report=html
-```
-
----
-
-## 関連ファイル
-
-- **Lambda ハンドラー**: `src/get_employee/handler.py`
-- **テストコード**: `src/get_employee/test/test_handler.py`
-- **共通エラークラス**: `src/common/errors.py`
-- **ロギング設定**: `src/common/logging_conf.py`
-- **パラメータローダー**: `src/common/parameter_loader.py`
-
----
-
-## 変更履歴
-
-| 日付       | バージョン | 変更内容 |
-| ---------- | ---------- | -------- |
-| 2025-12-09 | 1.0.0      | 初版作成 |

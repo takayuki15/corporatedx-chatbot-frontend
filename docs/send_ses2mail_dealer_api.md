@@ -2,9 +2,9 @@
 
 ## 概要
 
-`src/send_ses2mail_dealer/handler.py` のLambda関数は、問い合わせ内容を受け取り、業務小分類に基づいた担当窓口へAWS SES経由でメールを送信します。
+`src/send_ses2mail_dealer/handler.py` のLambda関数は、問い合わせ内容を受け取り、有人窓口に基づいた担当窓口へAWS SES経由でメールを送信します。
 
-**エンドポイント:** `/v1/send-mail` (POST)
+**エンドポイント:** `/v1/send_ses2mail_dealer` (POST)
 
 ---
 
@@ -15,8 +15,9 @@
 ```json
 {
   "httpMethod": "POST",
-  "path": "/send-mail",
+  "path": "/send_ses2mail_dealer",
   "headers": {
+    "x-apigw-api-id": "qsenl832o9",
     "Content-Type": "application/json"
   },
   "body": {
@@ -34,9 +35,9 @@
 | パラメータ              | 型        | 説明                                                               | 例                                         |
 | ----------------------- | --------- | ------------------------------------------------------------------ | ------------------------------------------ |
 | `questioner_email`      | `string`  | 問い合わせ者のメールアドレス（返信先）                             | `"user@example.com"`                       |
-| `business_sub_category` | `string`  | 業務小分類（問い合わせカテゴリ）                                   | `"経費精算"`                               |
-| `company_cd`            | `string`  | 会社コード                                                         | `"ALLJPN"`                                 |
-| `office_cd`             | `string`  | 事業所コード                                                       | `"MM00"`                                   |
+| `manned_counter_name`   | `string`  | 有人窓口名（問い合わせカテゴリ）                                   | `"経費精算"`                               |
+| `company`               | `string`  | 会社コード                                                         | `"ALLJPN"`                                 |
+| `office`                | `string`  | 事業所コード                                                       | `"MM00"`                                   |
 | `mail_content`          | `string`  | メール本文（問い合わせ内容）                                       | `"経費精算の期限について教えてください。"` |
 | `manned_counter_email`  | `string`  | 有人窓口のメールアドレス（送信先）                                 | `"expenses@example.com"`                   |
 | `is_office_access_only` | `boolean` | 事業所アクセス制限フラグ（メールタイトルに事業所コードを含めるか） | `true`                                     |
@@ -76,9 +77,9 @@
 ```json
 {
   "questioner_email": "user@example.com",
-  "company_cd": "ALLJPN",
-  "office_cd": "MM00",
-  "business_sub_category": "経費精算",
+  "company": "ALLJPN",
+  "office": "MM00",
+  "manned_counter_name": "経費精算",
   "mail_content": "経費精算の期限について教えてください。\n\n承認フローについても確認したいです。",
   "manned_counter_email": "expenses@example.com",
   "is_office_access_only": true
@@ -90,9 +91,9 @@
 ```json
 {
   "questioner_email": "user@example.com",
-  "business_sub_category": "経費精算",
-  "company_cd": "ALLJPN",
-  "office_cd": "MM00",
+  "manned_counter_name": "経費精算",
+  "company": "ALLJPN",
+  "office": "MM00",
   "mail_content": "経費精算の申請書を添付しますので、確認をお願いします。",
   "manned_counter_email": "expenses@example.com",
   "is_office_access_only": true,
@@ -114,12 +115,13 @@
 ```json
 {
   "httpMethod": "POST",
-  "path": "/send-mail",
+  "path": "/send_ses2mail_dealer",
   "headers": {
+    "x-apigw-api-id": "qsenl832o9",
     "Content-Type": "application/json"
   },
   "isBase64Encoded": false,
-  "body": "{\"questioner_email\":\"user@example.com\",\"business_sub_category\":\"経費精算\",\"company_cd\":\"ALLJPN\",\"office_cd\":\"MM00\",\"mail_content\":\"経費精算の期限について教えてください。\",\"manned_counter_email\":\"expenses@example.com\",\"is_office_access_only\":true}"
+  "body": "{\"questioner_email\":\"user@example.com\",\"manned_counter_name\":\"経費精算\",\"company\":\"ALLJPN\",\"office\":\"MM00\",\"mail_content\":\"経費精算の期限について教えてください。\",\"manned_counter_email\":\"expenses@example.com\",\"is_office_access_only\":true}"
 }
 ```
 
@@ -238,10 +240,10 @@ SESメール送信に失敗した場合:
 3. **メールタイトル生成**
    - リクエストパラメータ`is_office_access_only`に基づいてタイトルを生成
    - `is_office_access_only = true` の場合:
-     - 形式: `【ムラタヘルプ】{業務小分類}_{会社コード}_{事業所コード}`
+     - 形式: `【ムラタヘルプ】{有人窓口名}_{会社コード}_{事業所コード}`
      - 例: `【ムラタヘルプ】経費精算_ALLJPN_MM00`
    - `is_office_access_only = false` の場合:
-     - 形式: `【ムラタヘルプ】{業務小分類}_{会社コード}`
+     - 形式: `【ムラタヘルプ】{有人窓口名}_{会社コード}`
      - 例: `【ムラタヘルプ】経費精算_ALLJPN`
 
 4. **SESメール送信**
@@ -306,9 +308,9 @@ SESメール送信に失敗した場合:
 ```python
 class MailRequestModel(BaseModel):
     questioner_email: str
-    business_sub_category: str
-    company_cd: str
-    office_cd: str
+    manned_counter_name: str
+    company: str
+    office: str
     mail_content: str
     manned_counter_email: str
     is_office_access_only: bool
@@ -358,15 +360,15 @@ raise LambdaHandlerError(
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
     "questioner_email": "user@example.com",
-    "business_sub_category": "経費精算",
-    "company_cd": "ALLJPN",
-    "office_cd": "MM00",
+    "manned_counter_name": "経費精算",
+    "company": "ALLJPN",
+    "office": "MM00",
     "mail_content": "経費精算の期限について教えてください。",
     "manned_counter_email": "expenses@example.com",
     "is_office_access_only": true
@@ -400,15 +402,15 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 # Base64エンコードされたファイルデータを準備
 FILE_DATA=$(base64 -w 0 document.pdf)
 
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d "{
     \"questioner_email\": \"user@example.com\",
-    \"business_sub_category\": \"経費精算\",
-    \"company_cd\": \"ALLJPN\",
-    \"office_cd\": \"MM00\",
+    \"manned_counter_name\": \"経費精算\",
+    \"company\": \"ALLJPN\",
+    \"office\": \"MM00\",
     \"mail_content\": \"経費精算の申請書を添付しますので、確認をお願いします。\",
     \"manned_counter_email\": \"expenses@example.com\",
     \"is_office_access_only\": true,
@@ -443,15 +445,15 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
     "questioner_email": "user@example.com",
-    "business_sub_category": "IT問い合わせ",
-    "company_cd": "ALLJPN",
-    "office_cd": "MM00",
+    "manned_counter_name": "IT問い合わせ",
+    "company": "ALLJPN",
+    "office": "MM00",
     "mail_content": "VPN接続ができません。サポートをお願いします。",
     "manned_counter_email": "it-helpdesk@example.com",
     "is_office_access_only": false
@@ -481,15 +483,15 @@ curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce
 **リクエスト:**
 
 ```bash
-curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail" \
+curl -v "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer" \
   -H 'x-apigw-api-id: qsenl832o9' \
   -H 'Content-Type: application/json' \
   -X POST \
   -d '{
     "questioner_email": "user@example.com",
-    "business_sub_category": "経費精算",
-    "company_cd": "ALLJPN",
-    "office_cd": "MM00",
+    "manned_counter_name": "経費精算",
+    "company": "ALLJPN",
+    "office": "MM00",
     "manned_counter_email": "expenses@example.com",
     "is_office_access_only": true
   }'
@@ -542,12 +544,12 @@ import base64
 
 # 添付ファイルなし
 response = requests.post(
-    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail",
+    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer",
     json={
         "questioner_email": "user@example.com",
-        "business_sub_category": "経費精算",
-        "company_cd": "ALLJPN",
-        "office_cd": "MM00",
+        "manned_counter_name": "経費精算",
+        "company": "ALLJPN",
+        "office": "MM00",
         "mail_content": "経費精算の期限について教えてください。",
         "manned_counter_email": "expenses@example.com",
         "is_office_access_only": True
@@ -560,12 +562,12 @@ with open("document.pdf", "rb") as f:
     file_data = base64.b64encode(f.read()).decode("utf-8")
 
 response = requests.post(
-    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail",
+    "https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer",
     json={
         "questioner_email": "user@example.com",
-        "business_sub_category": "経費精算",
-        "company_cd": "ALLJPN",
-        "office_cd": "MM00",
+        "manned_counter_name": "経費精算",
+        "company": "ALLJPN",
+        "office": "MM00",
         "mail_content": "経費精算の申請書を添付します。",
         "manned_counter_email": "expenses@example.com",
         "is_office_access_only": True,
@@ -594,7 +596,7 @@ else:
 ```javascript
 // 添付ファイルなし
 const response = await fetch(
-  'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail',
+  'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer',
   {
     method: 'POST',
     headers: {
@@ -603,9 +605,9 @@ const response = await fetch(
     },
     body: JSON.stringify({
       questioner_email: 'user@example.com',
-      business_sub_category: '経費精算',
-      company_cd: 'ALLJPN',
-      office_cd: 'MM00',
+      manned_counter_name: '経費精算',
+      company: 'ALLJPN',
+      office: 'MM00',
       mail_content: '経費精算の期限について教えてください。',
       manned_counter_email: 'expenses@example.com',
       is_office_access_only: true,
@@ -627,7 +629,7 @@ reader.onload = async function (e) {
   );
 
   const response = await fetch(
-    'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send-mail',
+    'https://vpce-0aa3dde88309d3434-xk69w2m8.execute-api.ap-northeast-1.vpce.amazonaws.com/v1/send_ses2mail_dealer',
     {
       method: 'POST',
       headers: {
@@ -636,9 +638,9 @@ reader.onload = async function (e) {
       },
       body: JSON.stringify({
         questioner_email: 'user@example.com',
-        business_sub_category: '経費精算',
-        company_cd: 'ALLJPN',
-        office_cd: 'MM00',
+        manned_counter_name: '経費精算',
+        company: 'ALLJPN',
+        office: 'MM00',
         mail_content: '経費精算の申請書を添付します。',
         manned_counter_email: 'expenses@example.com',
         is_office_access_only: true,
@@ -671,73 +673,18 @@ reader.readAsArrayBuffer(file);
 
 ### MIMEメール構造
 
-- **Subject**: 業務小分類に基づいたメールタイトル
+- **Subject**: 有人窓口名に基づいたメールタイトル
 - **From**: Parameter Storeから取得した送信元アドレス
-- **To**: DynamoDBから取得した担当窓口アドレス
+- **To**: リクエストパラメータから取得した担当窓口アドレス
 - **Reply-To**: 問い合わせ者のメールアドレス（`questioner_email`）
 - **Body**: プレーンテキスト形式（UTF-8エンコード）
 - **Attachments**: Base64デコードされた添付ファイル
 
 ### メール送信先
 
-| 宛先種別 | フィールド             | 説明                                         |
-| -------- | ---------------------- | -------------------------------------------- |
-| To       | `manned_counter_email` | 業務小分類の担当窓口（リクエストパラメータ） |
-| Reply-To | `questioner_email`     | 問い合わせ者（リクエストパラメータ）         |
+| 宛先種別 | フィールド             | 説明                                                 |
+| -------- | ---------------------- | ---------------------------------------------------- |
+| To       | `manned_counter_email` | 有人窓口の担当メールアドレス（リクエストパラメータ） |
+| Reply-To | `questioner_email`     | 問い合わせ者（リクエストパラメータ）                 |
 
 **注意:** 問い合わせ者にはCc/Bccで送信されません。返信先としてのみ指定されます。
-
----
-
-## テスト
-
-### ユニットテスト実行
-
-```bash
-uv run pytest src/send_ses2mail_dealer/test/test_handler.py -v
-```
-
-### カバレッジ確認
-
-```bash
-uv run pytest src/send_ses2mail_dealer/test/test_handler.py --cov=src/send_ses2mail_dealer --cov-report=html
-```
-
----
-
-## 関連ファイル
-
-- **Lambda ハンドラー**: `src/send_ses2mail_dealer/handler.py`（バリデーションモデルを含む）
-- **テストコード**: `src/send_ses2mail_dealer/test/test_handler.py`
-- **AWS SDK ユーティリティ**: `src/common/aws_utils.py`
-- **共通エラークラス**: `src/common/errors.py`
-- **パラメータローダー**: `src/common/parameter_loader.py`
-
----
-
-## セキュリティ考慮事項
-
-### メールアドレスの検証
-
-- 現在の実装では、メールアドレス形式の厳密なバリデーションは行われていません
-- Pydanticの基本的な型チェックのみ実施
-- 本番環境では、EmailStrなどを使用した厳密なバリデーションを推奨
-
-### 添付ファイルのサイズ制限
-
-- SESの制限: メール全体で10MB
-- 複数ファイルの合計サイズに注意
-- 大容量ファイルはS3経由での共有を推奨
-
-### スパム対策
-
-- Reply-Toヘッダーを使用して問い合わせ者への返信を可能に
-- 送信元アドレスは固定（Parameter Storeで管理）
-
----
-
-## 変更履歴
-
-| 日付       | バージョン | 変更内容 |
-| ---------- | ---------- | -------- |
-| 2025-12-09 | 1.0.0      | 初版作成 |
