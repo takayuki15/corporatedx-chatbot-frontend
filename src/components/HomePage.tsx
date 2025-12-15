@@ -12,9 +12,11 @@ import Sidebar from '@/components/layout/Sidebar';
 import SupportSidebar from '@/components/layout/SupportSidebar';
 import { useRagChat } from '@/hooks';
 import { deleteChatHistory } from '@/lib/storage';
-import type { MannedCounterInfo, ChatMessage } from '@/lib/api';
+import type { ChatMessage } from '@/lib/api';
+import { useUserContext } from '@/contexts';
 
 export default function HomePage() {
+  const { user, employeeInfo } = useUserContext();
   const [chatInputValue, setChatInputValue] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [supportSidebarOpen, setSupportSidebarOpen] = useState(false);
@@ -40,7 +42,16 @@ export default function HomePage() {
         filesCount: options.files.length,
       });
 
-      await sendMessage(text);
+      // ユーザー情報と従業員情報が必要
+      if (!user || !employeeInfo) {
+        throw new Error('ユーザー情報または従業員情報が取得できていません');
+      }
+
+      await sendMessage(text, {
+        company: employeeInfo.company_code,
+        office: employeeInfo.office_code,
+        miam_id: user.unique_name,
+      });
       setChatInputValue('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -103,7 +114,7 @@ export default function HomePage() {
 
   // 最新のRAGレスポンスから有人窓口情報を取得
   const getMannedCounterData = (): {
-    mannedCounterInfo: MannedCounterInfo[];
+    priorityMannedCounterNames: string[];
     chatHistory: ChatMessage[];
     businessSubCategories: string[];
   } => {
@@ -112,20 +123,20 @@ export default function HomePage() {
 
     if (!latestMessage) {
       return {
-        mannedCounterInfo: [],
+        priorityMannedCounterNames: [],
         chatHistory: [],
         businessSubCategories: [],
       };
     }
 
     return {
-      mannedCounterInfo: latestMessage.manned_counter_info || [],
+      priorityMannedCounterNames: latestMessage.priority_manned_counter_names || [],
       chatHistory: latestMessage.chat_history || [],
       businessSubCategories: latestMessage.business_sub_categories || [],
     };
   };
 
-  const { mannedCounterInfo, chatHistory, businessSubCategories } =
+  const { priorityMannedCounterNames, chatHistory, businessSubCategories } =
     getMannedCounterData();
 
   return (
@@ -143,7 +154,7 @@ export default function HomePage() {
         <SupportSidebar
           open={supportSidebarOpen}
           onClose={() => setSupportSidebarOpen(false)}
-          mannedCounterInfo={mannedCounterInfo}
+          priorityMannedCounterNames={priorityMannedCounterNames}
           chatHistory={chatHistory}
           businessSubCategories={businessSubCategories}
         />

@@ -25,19 +25,21 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type {
-  MannedCounterInfo,
   ChatMessage,
   SendMailRequest,
   SendMailResponse,
+  MannedCounterDetail,
+  GetMannedCounterRequest,
+  GetMannedCounterResponse,
 } from '@/lib/api';
 import { useUserContext } from '@/contexts';
 
 interface SupportSidebarProps {
   open: boolean;
   onClose: () => void;
-  mannedCounterInfo: MannedCounterInfo[];
+  priorityMannedCounterNames: string[];
   chatHistory: ChatMessage[];
   businessSubCategories: string[];
 }
@@ -54,13 +56,15 @@ const steps = ['入力', '確認', '完了'];
 export default function SupportSidebar({
   open,
   onClose,
-  mannedCounterInfo,
+  priorityMannedCounterNames,
   chatHistory,
   businessSubCategories,
 }: SupportSidebarProps) {
   const { user, employeeInfo } = useUserContext();
+  const [mannedCounterInfo, setMannedCounterInfo] = useState<MannedCounterDetail[]>([]);
+  const [isLoadingCounters, setIsLoadingCounters] = useState(false);
   const [selectedContact, setSelectedContact] =
-    useState<MannedCounterInfo | null>(null);
+    useState<MannedCounterDetail | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<InquiryFormData>({
     message: '',
@@ -68,6 +72,50 @@ export default function SupportSidebar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentText, setSentText] = useState<string>('');
+
+  // 有人窓口情報を取得
+  useEffect(() => {
+    const fetchMannedCounters = async () => {
+      if (!open || !employeeInfo) {
+        return;
+      }
+
+      setIsLoadingCounters(true);
+      setError(null);
+
+      try {
+        const requestBody: GetMannedCounterRequest = {
+          priority_manned_counter_names: priorityMannedCounterNames,
+          company: employeeInfo.company_code,
+          office: employeeInfo.office_code,
+        };
+
+        const response = await fetch('/chatbot/api/get_manned_counter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error('有人窓口情報の取得に失敗しました');
+        }
+
+        const data = (await response.json()) as GetMannedCounterResponse;
+        setMannedCounterInfo(data.manned_counter_info);
+      } catch (err) {
+        console.error('Error fetching manned counters:', err);
+        setError(
+          err instanceof Error ? err.message : '有人窓口情報の取得に失敗しました'
+        );
+      } finally {
+        setIsLoadingCounters(false);
+      }
+    };
+
+    fetchMannedCounters();
+  }, [open, priorityMannedCounterNames, employeeInfo]);
 
   // サイドバーを閉じる時にリセット
   const handleClose = () => {
@@ -83,7 +131,7 @@ export default function SupportSidebar({
   };
 
   // チームカードをクリック
-  const handleContactClick = (contact: MannedCounterInfo) => {
+  const handleContactClick = (contact: MannedCounterDetail) => {
     setSelectedContact(contact);
     setActiveStep(0);
     setError(null);
@@ -131,15 +179,18 @@ export default function SupportSidebar({
 
       const mailContent = `【お問い合わせ内容】\n${formData.message}\n\n【チャット履歴】\n${chatHistoryText}`;
 
+      // business_sub_categoryを取得（最初のカテゴリを使用）
+      const businessSubCategory = businessSubCategories[0] || '';
+
       // SendMailRequestを構築
       const requestBody: SendMailRequest = {
         questioner_email: user.unique_name,
-        business_sub_category: selectedContact.business_sub_category,
+        business_sub_category: businessSubCategory,
         company_cd: employeeInfo.company_code,
         office_cd: employeeInfo.office_code,
         mail_content: mailContent,
         manned_counter_email: selectedContact.manned_counter_email || '',
-        is_office_access_only: selectedContact.is_office_access_only || false,
+        is_office_access_only: false, // デフォルト値
       };
 
       const response = await fetch('/chatbot/api/send-mail', {
@@ -238,14 +289,18 @@ export default function SupportSidebar({
           {!selectedContact ? (
             // 問い合わせ先一覧
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {mannedCounterInfo.length === 0 ? (
+              {isLoadingCounters ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : mannedCounterInfo.length === 0 ? (
                 <Alert severity="info">
                   利用可能な有人窓口がありません。
                 </Alert>
               ) : (
                 mannedCounterInfo.map((contact, index) => (
                   <Card
-                    key={`${contact.business_sub_category}-${index}`}
+                    key={`${contact.manned_counter_name}-${index}`}
                     onClick={() => handleContactClick(contact)}
                     sx={{
                       cursor: 'pointer',
@@ -262,8 +317,7 @@ export default function SupportSidebar({
                         variant="subtitle1"
                         sx={{ fontWeight: 600, mb: 1 }}
                       >
-                        {contact.manned_counter_name ||
-                          contact.business_sub_category}
+                        {contact.manned_counter_name}
                       </Typography>
                       {contact.manned_counter_description && (
                         <Typography

@@ -249,3 +249,41 @@ export interface SendMailApiResponse {
   statusCode: number;
   body: string; // JSON文字列: {"sent_text": "..."}
 }
+
+/**
+ * 有人窓口情報取得API関連の型定義
+ */
+
+/**
+ * 有人窓口情報取得リクエスト
+ */
+export interface GetMannedCounterRequest {
+  priority_manned_counter_names: string[];
+  company: string;
+  office: string;
+}
+
+/**
+ * 有人窓口情報オブジェクト
+ */
+export interface MannedCounterDetail {
+  manned_counter_name: string;
+  manned_counter_email: string;
+  manned_counter_description: string;
+  [key: string]: unknown; // DynamoDBの追加フィールド
+}
+
+/**
+ * 有人窓口情報取得レスポンス
+ */
+export interface GetMannedCounterResponse {
+  manned_counter_info: MannedCounterDetail[];
+}
+
+/**
+ * 有人窓口情報取得APIの生レスポンス（bodyがJSON文字列の場合）
+ */
+export interface GetMannedCounterApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列: {"manned_counter_info": [...]}
+}

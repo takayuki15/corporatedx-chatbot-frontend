@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "body": {
+    "manned_counter_info": [
+      {
+        "manned_counter_name": "経理窓口",
+        "manned_counter_email": "keiri@example.com",
+        "manned_counter_description": "経費精算・給与に関するお問い合わせを承っております。平日9:00-17:00対応。"
+      },
+      {
+        "manned_counter_name": "総務課",
+        "manned_counter_email": "soumu@example.com",
+        "manned_counter_description": "総務全般に関するお問い合わせを承っております。施設管理、備品管理など。"
+      },
+      {
+        "manned_counter_name": "人事部",
+        "manned_counter_email": "hr@example.com",
+        "manned_counter_description": "人事・労務に関するお問い合わせを承っております。休暇申請、勤怠管理など。"
+      },
+      {
+        "manned_counter_name": "ITヘルプデスク",
+        "manned_counter_email": "it-helpdesk@example.com",
+        "manned_counter_description": "IT関連のお問い合わせを承っております。システム、ネットワーク、アカウント管理など。"
+      }
+    ]
+  }
+}
