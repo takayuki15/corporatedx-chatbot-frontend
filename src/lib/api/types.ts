@@ -287,3 +287,31 @@ export interface GetMannedCounterApiResponse {
   statusCode: number;
   body: string; // JSON文字列: {"manned_counter_info": [...]}
 }
+
+/**
+ * チャンクハイライトAPI関連の型定義
+ */
+
+/**
+ * チャンクハイライトリクエスト
+ */
+export interface ChunkHighlighterRequest {
+  source_file_list: string[];
+  chunk_list: string[];
+}
+
+/**
+ * チャンクハイライトレスポンス
+ */
+export interface ChunkHighlighterResponse {
+  s3_path: string[];
+  html: string[];
+}
+
+/**
+ * チャンクハイライトAPIの生レスポンス（bodyがJSON文字列の場合）
+ */
+export interface ChunkHighlighterApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列: {"s3_path": [...], "html": [...]}
+}

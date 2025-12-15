@@ -1,0 +1,13 @@
+{
+  "statusCode": 200,
+  "body": {
+    "s3_path": [
+      "markdown/mmc/mm00/keiri/経費精算ガイド.md",
+      "markdown/alljpn/soumu/社内規定.md"
+    ],
+    "html": [
+      "<html><body><h1>経費精算ガイド</h1><p>経費精算の申請期限は、<mark>毎月末日までに前月分を提出してください。</mark></p><p>承認フローについては、上長の承認が必要です。</p></body></html>",
+      "<html><body><h1>社内規定</h1><p>年次有給休暇は<mark>入社後6ヶ月経過時点で付与されます。</mark></p><p>詳細については人事部にお問い合わせください。</p></body></html>"
+    ]
+  }
+}

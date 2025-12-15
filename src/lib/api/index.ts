@@ -7,6 +7,9 @@ export type { ApiClientConfig } from './client';
 export type {
   ApiResponse,
   ChatMessage,
+  ChunkHighlighterApiResponse,
+  ChunkHighlighterRequest,
+  ChunkHighlighterResponse,
   Employee,
   EmployeeApiResponse,
   EmployeeResponse,
