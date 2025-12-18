@@ -5,7 +5,7 @@ import type {
   RagResponse,
 } from '@/lib/api';
 import { apiClient } from '@/lib/api';
-import { useMockApi } from '@/lib/config';
+import { useMockApi, mockApiDelay } from '@/lib/config';
 import { readFileSync } from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
@@ -191,6 +191,9 @@ export async function POST(request: NextRequest) {
 
     // モックモードの場合
     if (useMockApi) {
+      // 実際のバックエンドのレスポンス時間をシミュレートするために遅延を追加
+      await new Promise(resolve => setTimeout(resolve, mockApiDelay));
+
       const mockFilePath = join(
         process.cwd(),
         'src',

@@ -93,6 +93,7 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
             <Paper
               elevation={1}
               sx={{
+                width: '85%',
                 maxWidth: '85%',
                 p: 2,
                 bgcolor: 'background.paper',

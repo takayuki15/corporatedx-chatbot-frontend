@@ -12,6 +12,16 @@ export const useMockApi =
   process.env.USE_MOCK_API === 'true';
 
 /**
+ * モックAPIの遅延時間（ミリ秒）
+ * 実際のバックエンドのレスポンス時間をシミュレートするための遅延
+ * デフォルト: 2000ms (2秒) - Skeleton表示の確認に適した時間
+ */
+export const mockApiDelay = parseInt(
+  process.env.MOCK_API_DELAY || '2000',
+  10
+);
+
+/**
  * バックエンドAPIのベースURL
  */
 export const backendApiUrl =
@@ -29,6 +39,7 @@ export function logConfig() {
   if (process.env.NODE_ENV === 'development') {
     console.log('[Config]', {
       useMockApi,
+      mockApiDelay: useMockApi ? `${mockApiDelay}ms` : 'N/A',
       backendApiUrl,
       hasApiGatewayId: !!apiGatewayId,
     });
