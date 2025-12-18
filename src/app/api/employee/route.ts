@@ -1,8 +1,4 @@
-import type {
-  EmployeeApiResponse,
-  EmployeeResponse,
-  ErrorResponse,
-} from '@/lib/api';
+import type { EmployeeResponse, ErrorResponse } from '@/lib/api';
 import { apiClient } from '@/lib/api';
 import { useMockApi } from '@/lib/config';
 import { readFileSync } from 'fs';
@@ -47,14 +43,14 @@ export async function GET(request: NextRequest) {
     }
 
     // 本番モードの場合
-    const response = await apiClient.get<EmployeeApiResponse>('/v1/employee', {
-      MIAMID: miamid,
-    });
+    const response: EmployeeResponse = await apiClient.get<EmployeeResponse>(
+      '/v1/get_employee',
+      {
+        miam_id: miamid,
+      }
+    );
 
-    // bodyをパースして {"employee": {...}} 構造を取得
-    const parsedBody: EmployeeResponse = JSON.parse(response.body);
-
-    return NextResponse.json(parsedBody, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Error fetching employee:', error);
     console.error('Error details:', {

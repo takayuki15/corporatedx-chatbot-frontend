@@ -144,13 +144,7 @@ export async function POST(request: NextRequest) {
       body
     );
 
-    // bodyをパースして {"statusCode": 200, "body": "{\"sent_text\": \"...\"}"} から body の中身を取得
-    const parsedBody: SendMailResponse =
-      typeof response.body === 'string'
-        ? JSON.parse(response.body)
-        : response.body;
-
-    return NextResponse.json(parsedBody, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Error in send-mail API:', error);
     console.error('Error details:', {

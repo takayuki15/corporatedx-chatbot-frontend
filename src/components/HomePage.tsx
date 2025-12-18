@@ -1,19 +1,19 @@
 'use client';
 
 import { Box, IconButton } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BsLayoutSidebar } from 'react-icons/bs';
 
+import ChatHeader from '@/components/chat/ChatHeader';
 import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
-import ChatHeader from '@/components/chat/ChatHeader';
 import TermsMessage from '@/components/chat/TermsMessage';
 import Sidebar from '@/components/layout/Sidebar';
 import SupportSidebar from '@/components/layout/SupportSidebar';
-import { useRagChat } from '@/hooks';
-import { deleteChatHistory } from '@/lib/storage';
-import type { ChatMessage } from '@/lib/api';
 import { useUserContext } from '@/contexts';
+import { useRagChat } from '@/hooks';
+import type { ChatMessage } from '@/lib/api';
+import { deleteChatHistory } from '@/lib/storage';
 
 export default function HomePage() {
   const { user, employeeInfo } = useUserContext();
@@ -23,7 +23,15 @@ export default function HomePage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   // RAGチャット機能を使用
-  const { messages, loading, error, lastUserMessage, sendMessage, resetSession, loadSession } = useRagChat();
+  const {
+    messages,
+    loading,
+    error,
+    lastUserMessage,
+    sendMessage,
+    resetSession,
+    loadSession,
+  } = useRagChat();
 
   // 利用規約の同意状態をチェック
   useEffect(() => {
@@ -130,7 +138,8 @@ export default function HomePage() {
     }
 
     return {
-      priorityMannedCounterNames: latestMessage.priority_manned_counter_names || [],
+      priorityMannedCounterNames:
+        latestMessage.priority_manned_counter_names || [],
       chatHistory: latestMessage.chat_history || [],
       businessSubCategories: latestMessage.business_sub_categories || [],
     };
@@ -289,7 +298,9 @@ export default function HomePage() {
                     onSend={handleChatSend}
                     value={chatInputValue}
                     onChange={setChatInputValue}
-                    disabled={!termsAccepted || loading}
+                    disabled={
+                      !termsAccepted || !user || !employeeInfo || loading
+                    }
                     loading={loading}
                   />
                 </Box>

@@ -43,7 +43,11 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as RagRequest;
 
     // 必須パラメータのバリデーション
-    if (!body.query || typeof body.query !== 'string' || body.query.trim().length === 0) {
+    if (
+      !body.query ||
+      typeof body.query !== 'string' ||
+      body.query.trim().length === 0
+    ) {
       return NextResponse.json(
         { error: 'query is required and must be a non-empty string' },
         { status: 400 }
@@ -64,7 +68,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!body.miam_id || typeof body.miam_id !== 'string' || body.miam_id.trim().length === 0) {
+    if (
+      !body.miam_id ||
+      typeof body.miam_id !== 'string' ||
+      body.miam_id.trim().length === 0
+    ) {
       return NextResponse.json(
         { error: 'miam_id is required and must be a non-empty string' },
         { status: 400 }
@@ -74,10 +82,15 @@ export async function POST(request: NextRequest) {
     // オプションパラメータのバリデーション
     if (
       body.business_sub_category_retrieval_mode &&
-      !['hybrid', 'bm25', 'cos_sim'].includes(body.business_sub_category_retrieval_mode)
+      !['hybrid', 'bm25', 'cos_sim'].includes(
+        body.business_sub_category_retrieval_mode
+      )
     ) {
       return NextResponse.json(
-        { error: 'business_sub_category_retrieval_mode must be one of: hybrid, bm25, cos_sim' },
+        {
+          error:
+            'business_sub_category_retrieval_mode must be one of: hybrid, bm25, cos_sim',
+        },
         { status: 400 }
       );
     }
@@ -87,14 +100,17 @@ export async function POST(request: NextRequest) {
       !['hybrid', 'bm25', 'cos_sim'].includes(body.answer_retrieval_mode)
     ) {
       return NextResponse.json(
-        { error: 'answer_retrieval_mode must be one of: hybrid, bm25, cos_sim' },
+        {
+          error: 'answer_retrieval_mode must be one of: hybrid, bm25, cos_sim',
+        },
         { status: 400 }
       );
     }
 
     if (
       body.business_sub_category_top_n !== undefined &&
-      (body.business_sub_category_top_n < 1 || body.business_sub_category_top_n > 100)
+      (body.business_sub_category_top_n < 1 ||
+        body.business_sub_category_top_n > 100)
     ) {
       return NextResponse.json(
         { error: 'business_sub_category_top_n must be between 1 and 100' },
@@ -121,8 +137,13 @@ export async function POST(request: NextRequest) {
 
     // LLMパラメータのバリデーション
     if (body.llm_params) {
-      const { temperature, frequency_penalty, presence_penalty, top_p, max_tokens } =
-        body.llm_params;
+      const {
+        temperature,
+        frequency_penalty,
+        presence_penalty,
+        top_p,
+        max_tokens,
+      } = body.llm_params;
 
       if (temperature !== undefined && (temperature < 0 || temperature > 2)) {
         return NextResponse.json(
@@ -131,14 +152,22 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (frequency_penalty !== undefined && (frequency_penalty < -2 || frequency_penalty > 2)) {
+      if (
+        frequency_penalty !== undefined &&
+        (frequency_penalty < -2 || frequency_penalty > 2)
+      ) {
         return NextResponse.json(
-          { error: 'llm_params.frequency_penalty must be between -2.0 and 2.0' },
+          {
+            error: 'llm_params.frequency_penalty must be between -2.0 and 2.0',
+          },
           { status: 400 }
         );
       }
 
-      if (presence_penalty !== undefined && (presence_penalty < -2 || presence_penalty > 2)) {
+      if (
+        presence_penalty !== undefined &&
+        (presence_penalty < -2 || presence_penalty > 2)
+      ) {
         return NextResponse.json(
           { error: 'llm_params.presence_penalty must be between -2.0 and 2.0' },
           { status: 400 }
@@ -182,13 +211,7 @@ export async function POST(request: NextRequest) {
       body
     );
 
-    // bodyをパースして {"statusCode": 200, "body": {...}} から body の中身を取得
-    const parsedBody: RagResponse =
-      typeof response.body === 'string'
-        ? JSON.parse(response.body)
-        : response.body;
-
-    return NextResponse.json(parsedBody, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Error in automated_answer API:', error);
     console.error('Error details:', {
