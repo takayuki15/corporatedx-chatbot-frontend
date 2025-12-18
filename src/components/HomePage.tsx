@@ -241,7 +241,6 @@ export default function HomePage() {
                     pt: 8,
                   }),
               pb: 4,
-              overflow: 'hidden',
             }}
           >
             {hasMessages ? (
