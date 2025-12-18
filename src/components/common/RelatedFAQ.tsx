@@ -39,19 +39,20 @@ export default function RelatedFAQ({
 
   /**
    * FAQ source textから質問と回答をパース
-   * 形式: "Q: 質問文\nA: 回答文"
+   * 形式: "質問: [カテゴリ] 質問内容 回答: 回答内容"
    */
   const parseFAQItem = (sourceText: string): FAQItem => {
-    const lines = sourceText.split('\n');
+    // "回答:" で分割して質問と回答を取得
+    const parts = sourceText.split(/\s*回答:\s*/);
+
     let question = '';
     let answer = '';
 
-    for (const line of lines) {
-      if (line.startsWith('Q: ')) {
-        question = line.substring(3).trim();
-      } else if (line.startsWith('A: ')) {
-        answer = line.substring(3).trim();
-      }
+    if (parts.length >= 2) {
+      // "質問:" を除去して質問部分を取得
+      question = parts[0].replace(/^質問:\s*/, '').trim();
+      // 回答部分を取得（2番目以降を結合、"回答:"が複数ある場合に対応）
+      answer = parts.slice(1).join(' 回答: ').trim();
     }
 
     return { question, answer };
