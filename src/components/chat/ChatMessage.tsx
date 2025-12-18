@@ -145,10 +145,12 @@ function FeedbackButtons() {
  * RAGレスポンスの各パターンに対応した表示を行う
  */
 export default function ChatMessage({ response }: ChatMessageProps) {
-  // 最後のユーザーメッセージを取得
-  const lastUserMessage = response.chat_history
-    .filter(msg => msg.role === 'user')
-    .pop();
+  // ユーザーメッセージを取得
+  // フロントエンド側で追加したuserQueryを優先、なければchat_historyから取得
+  const userMessage = response.userQuery ||
+    response.chat_history
+      .filter(msg => msg.role === 'user')
+      .pop()?.content;
 
   // 投稿時間を現在時刻で表示（TODO: メッセージごとのタイムスタンプを追加）
   const timestamp = new Date().toLocaleTimeString('ja-JP', {
@@ -172,7 +174,7 @@ export default function ChatMessage({ response }: ChatMessageProps) {
   return (
     <Box sx={{ mb: 4 }}>
       {/* ユーザーメッセージ */}
-      {lastUserMessage && (
+      {userMessage && (
         <Box
           sx={{
             display: 'flex',
@@ -191,7 +193,7 @@ export default function ChatMessage({ response }: ChatMessageProps) {
               borderRadius: 2,
             }}
           >
-            <Typography variant="body1">{lastUserMessage.content}</Typography>
+            <Typography variant="body1">{userMessage}</Typography>
           </Paper>
           <Typography
             variant="caption"

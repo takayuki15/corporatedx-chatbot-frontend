@@ -160,6 +160,7 @@ interface RagResponseBase {
   chat_history: ChatMessage[];
   business_sub_categories: string[];
   priority_manned_counter_names: string[];
+  userQuery?: string; // フロントエンド側で追加するユーザーの質問文
 }
 
 /**

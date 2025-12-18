@@ -68,7 +68,13 @@ export function useRagChat() {
 
         const data: RagResponse = await response.json();
 
-        const updatedMessages = [...state.messages, data];
+        // フロントエンド側でユーザーの質問文を追加
+        const dataWithUserQuery = {
+          ...data,
+          userQuery: query,
+        };
+
+        const updatedMessages = [...state.messages, dataWithUserQuery];
 
         setState({
           messages: updatedMessages,
