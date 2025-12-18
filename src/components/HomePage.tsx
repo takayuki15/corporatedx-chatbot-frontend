@@ -21,6 +21,7 @@ export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [supportSidebarOpen, setSupportSidebarOpen] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
 
   // RAGチャット機能を使用
   const {
@@ -55,12 +56,20 @@ export default function HomePage() {
         throw new Error('ユーザー情報または従業員情報が取得できていません');
       }
 
+      // 初回メッセージかどうかを記録
+      const isFirstMessage = messages.length === 0;
+
       await sendMessage(text, {
         company: employeeInfo.company_code,
         office: employeeInfo.office_code,
         miam_id: user.unique_name,
       });
       setChatInputValue('');
+
+      // 初回メッセージの場合はサイドバーを更新
+      if (isFirstMessage) {
+        setSidebarRefreshTrigger(prev => prev + 1);
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
       // エラーは useRagChat で管理されるため、ここでは追加処理不要
@@ -86,6 +95,8 @@ export default function HomePage() {
       const currentSessionId = messages[0]?.session_id;
       if (currentSessionId) {
         deleteChatHistory(currentSessionId);
+        // サイドバーを更新
+        setSidebarRefreshTrigger(prev => prev + 1);
       }
       resetSession();
     }
@@ -110,10 +121,12 @@ export default function HomePage() {
   const getChatTitle = () => {
     if (messages.length === 0) return '新しいチャット';
 
-    const firstUserMessage = messages[0]?.chat_history?.find(
-      msg => msg.role === 'user'
-    );
-    const title = firstUserMessage?.content || '新しいチャット';
+    // userQueryを優先、なければchat_historyから取得
+    const firstMessage = messages[0];
+    const title =
+      firstMessage?.userQuery ||
+      firstMessage?.chat_history?.find(msg => msg.role === 'user')?.content ||
+      '新しいチャット';
     return title.length > 15 ? title.substring(0, 15) + '...' : title;
   };
 
@@ -158,6 +171,7 @@ export default function HomePage() {
           onClose={() => setSidebarOpen(false)}
           onSelectSession={handleSelectSession}
           onNewChat={handleNewChat}
+          refreshTrigger={sidebarRefreshTrigger}
         />
 
         {/* 有人窓口サイドバー */}

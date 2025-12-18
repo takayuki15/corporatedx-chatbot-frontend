@@ -30,6 +30,7 @@ interface SidebarProps {
   onClose: () => void;
   onSelectSession?: (sessionId: string) => void;
   onNewChat?: () => void;
+  refreshTrigger?: number;
 }
 
 interface ChatHistoryItem {
@@ -38,7 +39,7 @@ interface ChatHistoryItem {
   lastUpdate: Date;
 }
 
-export default function Sidebar({ open, onClose, onSelectSession, onNewChat }: SidebarProps) {
+export default function Sidebar({ open, onClose, onSelectSession, onNewChat, refreshTrigger }: SidebarProps) {
   const { user, loading } = useUserContext();
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
 
@@ -53,10 +54,12 @@ export default function Sidebar({ open, onClose, onSelectSession, onNewChat }: S
         if (messages.length === 0) return null;
 
         // 最初のユーザーメッセージをタイトルとして使用
-        const firstUserMessage = messages[0]?.chat_history?.find(
-          msg => msg.role === 'user'
-        );
-        const title = firstUserMessage?.content || 'タイトルなし';
+        // userQueryを優先、なければchat_historyから取得
+        const firstMessage = messages[0];
+        const title =
+          firstMessage?.userQuery ||
+          firstMessage?.chat_history?.find(msg => msg.role === 'user')?.content ||
+          'タイトルなし';
 
         return {
           sessionId,
@@ -68,7 +71,7 @@ export default function Sidebar({ open, onClose, onSelectSession, onNewChat }: S
       .sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime()); // 新しい順
 
     setChatHistory(historyItems);
-  }, [open]); // サイドバーが開くたびに再読み込み
+  }, [open, refreshTrigger]); // サイドバーが開くたびに、または削除時に再読み込み
 
   // nameからスラッシュ以降の日本語名を抽出
   const displayName = user?.name?.includes('/')
