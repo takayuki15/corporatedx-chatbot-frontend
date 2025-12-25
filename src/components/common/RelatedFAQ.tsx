@@ -8,6 +8,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Link,
   Typography,
 } from '@mui/material';
 
@@ -56,6 +57,60 @@ export default function RelatedFAQ({
     }
 
     return { question, answer };
+  };
+
+  /**
+   * 回答テキスト内のurltextをパースしてReact要素に変換
+   * 形式: {{ urltext("テキスト", "URL") }}
+   */
+  const parseAnswerWithLinks = (answer: string): React.ReactNode[] => {
+    const urltextPattern =
+      /\{\{\s*urltext\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)\s*\}\}/g;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = urltextPattern.exec(answer)) !== null) {
+      // urltextの前のテキストを追加
+      if (match.index > lastIndex) {
+        const textBefore = answer.substring(lastIndex, match.index);
+        if (textBefore) {
+          parts.push(textBefore);
+        }
+      }
+
+      // リンクを追加
+      const linkText = match[1];
+      const linkUrl = match[2];
+      parts.push(
+        <Link
+          key={`link-${match.index}`}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: 'primary.main' }}
+        >
+          {linkText}
+        </Link>
+      );
+
+      lastIndex = urltextPattern.lastIndex;
+    }
+
+    // 残りのテキストを追加
+    if (lastIndex < answer.length) {
+      const remainingText = answer.substring(lastIndex);
+      if (remainingText) {
+        parts.push(remainingText);
+      }
+    }
+
+    // urltextが見つからない場合は元のテキストをそのまま返す
+    if (parts.length === 0) {
+      return [answer];
+    }
+
+    return parts;
   };
 
   // faq_source_textsがある場合はそれを使用、なければfaq_answersを使用
@@ -137,10 +192,14 @@ export default function RelatedFAQ({
               color="text.secondary"
               sx={{ whiteSpace: 'pre-wrap' }}
             >
-              {item.answer}
+              {parseAnswerWithLinks(item.answer)}
             </Typography>
             {faqSourceFiles && faqSourceFiles[index] && (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1, display: 'block' }}
+              >
                 出典: {faqSourceFiles[index]}
               </Typography>
             )}
