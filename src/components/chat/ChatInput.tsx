@@ -1,18 +1,8 @@
 'use client';
 
 import { Send } from '@mui/icons-material';
-import {
-  Box,
-  IconButton,
-  TextField,
-  styled,
-} from '@mui/material';
-import {
-  KeyboardEvent,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { Box, IconButton, TextField, styled } from '@mui/material';
+import { KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
 interface ChatInputProps {
   onSend: (
@@ -156,6 +146,13 @@ export default function ChatInput({
               disabled={!canSend}
               aria-label="メッセージを送信"
               size="small"
+              sx={{
+                color: 'action.active',
+                '&.Mui-disabled': {
+                  color: 'action.active',
+                  opacity: 1,
+                },
+              }}
             >
               <Send />
             </IconButton>
