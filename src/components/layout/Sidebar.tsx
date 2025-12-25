@@ -39,7 +39,13 @@ interface ChatHistoryItem {
   lastUpdate: Date;
 }
 
-export default function Sidebar({ open, onClose, onSelectSession, onNewChat, refreshTrigger }: SidebarProps) {
+export default function Sidebar({
+  open,
+  onClose,
+  onSelectSession,
+  onNewChat,
+  refreshTrigger,
+}: SidebarProps) {
   const { user, loading } = useUserContext();
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
 
@@ -58,7 +64,8 @@ export default function Sidebar({ open, onClose, onSelectSession, onNewChat, ref
         const firstMessage = messages[0];
         const title =
           firstMessage?.userQuery ||
-          firstMessage?.chat_history?.find(msg => msg.role === 'user')?.content ||
+          firstMessage?.chat_history?.find(msg => msg.role === 'user')
+            ?.content ||
           'タイトルなし';
 
         return {
@@ -107,7 +114,7 @@ export default function Sidebar({ open, onClose, onSelectSession, onNewChat, ref
               variant="subtitle1"
               sx={{ fontWeight: 600, color: '#6E41FF' }}
             >
-              ムラタヘルプ
+              MurataHelp
             </Typography>
 
             <ExpandMoreIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
@@ -164,7 +171,7 @@ export default function Sidebar({ open, onClose, onSelectSession, onNewChat, ref
                 </Typography>
               </Box>
             ) : (
-              chatHistory.map((chat) => (
+              chatHistory.map(chat => (
                 <ListItem key={chat.sessionId} disablePadding>
                   <ListItemButton
                     onClick={() => onSelectSession?.(chat.sessionId)}
