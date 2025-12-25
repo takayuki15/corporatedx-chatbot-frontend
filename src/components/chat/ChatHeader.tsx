@@ -1,7 +1,7 @@
 'use client';
 
 import { DeleteOutline as DeleteIcon } from '@mui/icons-material';
-import { Box, IconButton, Typography, Button } from '@mui/material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 
 interface ChatHeaderProps {
   title: string;
@@ -13,25 +13,35 @@ interface ChatHeaderProps {
 /**
  * チャットヘッダーコンポーネント
  */
-export default function ChatHeader({ title, onDelete, onSupport, sidebarOpen = true }: ChatHeaderProps) {
+export default function ChatHeader({
+  title,
+  onDelete,
+  onSupport,
+  sidebarOpen = true,
+}: ChatHeaderProps) {
   return (
     <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        pl: sidebarOpen ? 4 : 8,
+        pl: sidebarOpen ? 4 : 10,
         pr: 4,
         py: 2,
         borderBottom: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
         width: '100%',
+        height: '64px',
+        boxSizing: 'border-box',
       }}
     >
       {/* 左側: タイトル + 削除アイコン */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, color: 'text.primary' }}
+        >
           {title}
         </Typography>
         {onDelete && (

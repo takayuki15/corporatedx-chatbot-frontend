@@ -216,10 +216,14 @@ export default function HomePage() {
                 display: 'flex',
                 alignItems: 'center',
                 p: 2,
-                position: 'absolute',
+                position: 'fixed',
                 top: 0,
                 left: 0,
-                zIndex: 1000,
+                zIndex: 1100,
+                height: '64px',
+                borderBottom: 1,
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
               }}
             >
               <IconButton
@@ -242,12 +246,24 @@ export default function HomePage() {
 
           {/* ヘッダー（メッセージがある場合のみ表示） */}
           {hasMessages && (
-            <ChatHeader
-              title={getChatTitle()}
-              onDelete={handleDeleteChat}
-              onSupport={handleSupport}
-              sidebarOpen={sidebarOpen}
-            />
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 0,
+                left: sidebarOpen ? '280px' : 0,
+                right: 0,
+                zIndex: 1000,
+                bgcolor: 'background.paper',
+                transition: 'left 0.3s ease',
+              }}
+            >
+              <ChatHeader
+                title={getChatTitle()}
+                onDelete={handleDeleteChat}
+                onSupport={handleSupport}
+                sidebarOpen={sidebarOpen}
+              />
+            </Box>
           )}
 
           {/* メインエリア */}
@@ -260,6 +276,7 @@ export default function HomePage() {
                 ? {
                     // メッセージがある場合: チャット履歴を上部に表示
                     justifyContent: 'flex-start',
+                    pt: '64px', // ChatHeaderの高さ分のpadding
                   }
                 : {
                     // メッセージがない場合: 中央に配置
