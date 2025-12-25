@@ -132,7 +132,8 @@ export default function HomePage() {
 
   // メッセージがある場合とない場合でレイアウトを切り替え
   // ローディング中（初回送信後のレスポンス待ち）もチャット履歴画面を表示
-  const hasMessages = messages.length > 0 || (loading && lastUserMessage !== null);
+  const hasMessages =
+    messages.length > 0 || (loading && lastUserMessage !== null);
 
   // 最新のRAGレスポンスから有人窓口情報を取得
   const getMannedCounterData = (): {
@@ -300,7 +301,6 @@ export default function HomePage() {
                   alignItems: 'center',
                   justifyContent: 'flex-start',
                   gap: 4,
-                  mt: 6,
                 }}
               >
                 {/* 利用規約 */}

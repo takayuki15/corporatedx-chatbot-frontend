@@ -112,7 +112,6 @@ export default function TermsMessage({ onAgreeChange }: TermsMessageProps) {
       <Paper
         elevation={0}
         sx={{
-          maxWidth: '80%',
           p: 3,
           bgcolor: 'grey.100',
           borderRadius: 2,
