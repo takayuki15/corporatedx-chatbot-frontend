@@ -213,7 +213,6 @@ export default function SupportSidebar({
       const result = (await response.json()) as SendMailResponse;
       setSentText(result.sent_text);
       handleNext();
-      onComplete();
     } catch (err) {
       console.error('Error sending mail:', err);
       setError(
@@ -567,7 +566,10 @@ export default function SupportSidebar({
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Button
                   variant="outlined"
-                  onClick={handleBackToList}
+                  onClick={() => {
+                    onComplete();
+                    handleClose();
+                  }}
                   sx={{
                     color: '#6E41FF',
                     borderColor: '#6E41FF',
@@ -577,7 +579,7 @@ export default function SupportSidebar({
                     },
                   }}
                 >
-                  一覧に戻る
+                  閉じる
                 </Button>
               </Box>
             )}

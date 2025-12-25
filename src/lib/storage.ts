@@ -95,7 +95,7 @@ export function getAllSessionIds(): string[] {
  */
 export function getSessionLastUpdate(sessionId: string): Date | null {
   try {
-    const messages = loadChatHistory(sessionId);
+    const { messages } = loadChatHistory(sessionId);
     if (messages.length === 0) {
       return null;
     }

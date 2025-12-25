@@ -127,6 +127,7 @@ export function useRagChat() {
       error: null,
       sessionId: null,
       lastUserMessage: null,
+      status: 'open',
     });
   }, [state.sessionId]);
 
