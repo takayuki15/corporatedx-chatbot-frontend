@@ -56,7 +56,7 @@ export default function Sidebar({
     const sessionIds = getAllSessionIds();
     const historyItems: ChatHistoryItem[] = sessionIds
       .map(sessionId => {
-        const messages = loadChatHistory(sessionId);
+        const { messages } = loadChatHistory(sessionId);
         if (messages.length === 0) return null;
 
         // 最初のユーザーメッセージをタイトルとして使用
