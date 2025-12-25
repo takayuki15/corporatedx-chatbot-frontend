@@ -147,10 +147,9 @@ function FeedbackButtons() {
 export default function ChatMessage({ response }: ChatMessageProps) {
   // ユーザーメッセージを取得
   // フロントエンド側で追加したuserQueryを優先、なければchat_historyから取得
-  const userMessage = response.userQuery ||
-    response.chat_history
-      .filter(msg => msg.role === 'user')
-      .pop()?.content;
+  const userMessage =
+    response.userQuery ||
+    response.chat_history.filter(msg => msg.role === 'user').pop()?.content;
 
   // 投稿時間を現在時刻で表示（TODO: メッセージごとのタイムスタンプを追加）
   const timestamp = new Date().toLocaleTimeString('ja-JP', {
@@ -224,12 +223,17 @@ export default function ChatMessage({ response }: ChatMessageProps) {
 
           {/* パターン2: 関連FAQのみ */}
           {hasFaqOnly && 'faq' in response && (
-            <RelatedFAQ
-              faqAnswers={response.faq.answer}
-              faqSourceTexts={response.faq.source_texts}
-              faqSourceFiles={response.faq.source_files}
-              title="関連FAQ"
-            />
+            <>
+              <RelatedFAQ
+                faqAnswers={response.faq.answer}
+                faqSourceTexts={response.faq.source_texts}
+                faqSourceFiles={response.faq.source_files}
+                title="関連FAQ"
+              />
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                解決できない場合は、もう少し具体的に質問するとより適切に回答できるかもしれません。
+              </Typography>
+            </>
           )}
 
           {/* パターン3: RAG回答のみ */}
@@ -240,6 +244,9 @@ export default function ChatMessage({ response }: ChatMessageProps) {
                 ragSourceFiles={response.rag.source_files}
                 ragSourceTexts={response.rag.source_texts}
               />
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                解決できない場合は、もう少し具体的に質問するとより適切に回答できるかもしれません。
+              </Typography>
               <FeedbackButtons />
             </Box>
           )}
@@ -265,6 +272,9 @@ export default function ChatMessage({ response }: ChatMessageProps) {
                   title="関連FAQ"
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                解決できない場合は、もう少し具体的に質問するとより適切に回答できるかもしれません。
+              </Typography>
               <FeedbackButtons />
             </Box>
           )}
