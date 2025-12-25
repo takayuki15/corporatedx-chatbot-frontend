@@ -22,6 +22,7 @@ export default function HomePage() {
   const [supportSidebarOpen, setSupportSidebarOpen] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
+  const [termsMessageKey, setTermsMessageKey] = useState(0);
 
   // RAGチャット機能を使用
   const {
@@ -87,6 +88,8 @@ export default function HomePage() {
     // 新しいチャット開始時に利用規約を再表示
     sessionStorage.removeItem('termsConsent');
     setTermsAccepted(false);
+    // TermsMessageコンポーネントを再マウントしてチェックボックスをリセット
+    setTermsMessageKey(prev => prev + 1);
   };
 
   // チャット削除時の処理
@@ -304,7 +307,10 @@ export default function HomePage() {
                 }}
               >
                 {/* 利用規約 */}
-                <TermsMessage onAgreeChange={handleTermsAgreeChange} />
+                <TermsMessage
+                  key={termsMessageKey}
+                  onAgreeChange={handleTermsAgreeChange}
+                />
 
                 {/* チャット入力エリア（常に表示、同意状態で有効/無効を切り替え） */}
                 <Box sx={{ width: '100%', maxWidth: 800, px: 3 }}>
