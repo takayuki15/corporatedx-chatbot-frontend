@@ -1,5 +1,9 @@
 import type { RagRequest, RagResponse } from '@/lib/api';
-import { saveChatHistory, loadChatHistory, deleteChatHistory } from '@/lib/storage';
+import {
+  deleteChatHistory,
+  loadChatHistory,
+  saveChatHistory,
+} from '@/lib/storage';
 import { useCallback, useState } from 'react';
 
 /**
@@ -11,6 +15,7 @@ export interface RagChatState {
   error: string | null;
   sessionId: string | null;
   lastUserMessage: string | null;
+  status: 'open' | 'closed';
 }
 
 /**
@@ -23,6 +28,7 @@ export function useRagChat() {
     error: null,
     sessionId: null,
     lastUserMessage: null,
+    status: 'open',
   });
 
   /**
@@ -76,16 +82,17 @@ export function useRagChat() {
 
         const updatedMessages = [...state.messages, dataWithUserQuery];
 
-        setState({
+        setState(prev => ({
           messages: updatedMessages,
           loading: false,
           error: null,
           sessionId: data.session_id,
           lastUserMessage: null,
-        });
+          status: prev.status,
+        }));
 
         // localStorageに保存
-        saveChatHistory(data.session_id, updatedMessages);
+        saveChatHistory(data.session_id, updatedMessages, state.status);
 
         return data;
       } catch (error) {
@@ -143,6 +150,7 @@ export function useRagChat() {
       error: null,
       sessionId: null,
       lastUserMessage: null,
+      status: 'open',
     });
   }, []);
 
@@ -150,13 +158,28 @@ export function useRagChat() {
    * 指定したセッションを読み込む
    */
   const loadSession = useCallback((sessionId: string) => {
-    const savedMessages = loadChatHistory(sessionId);
+    const { messages: savedMessages, status } = loadChatHistory(sessionId);
     setState({
       messages: savedMessages,
       loading: false,
       error: null,
       sessionId: sessionId,
       lastUserMessage: null,
+      status: status,
+    });
+  }, []);
+
+  /**
+   * チャットをクローズ（有人窓口への問い合わせ完了時）
+   */
+  const closeChat = useCallback(() => {
+    setState(prev => {
+      const newState = { ...prev, status: 'closed' as const };
+      // localStorageに保存
+      if (prev.sessionId) {
+        saveChatHistory(prev.sessionId, prev.messages, 'closed');
+      }
+      return newState;
     });
   }, []);
 
@@ -166,10 +189,12 @@ export function useRagChat() {
     error: state.error,
     sessionId: state.sessionId,
     lastUserMessage: state.lastUserMessage,
+    status: state.status,
     sendMessage,
     clearMessages,
     clearError,
     resetSession,
     loadSession,
+    closeChat,
   };
 }

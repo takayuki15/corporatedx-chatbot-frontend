@@ -16,10 +16,18 @@ function getStorageKey(sessionId: string): string {
 /**
  * チャット履歴を保存
  */
-export function saveChatHistory(sessionId: string, messages: RagResponse[]): void {
+export function saveChatHistory(
+  sessionId: string,
+  messages: RagResponse[],
+  status?: 'open' | 'closed'
+): void {
   try {
     const key = getStorageKey(sessionId);
-    localStorage.setItem(key, JSON.stringify(messages));
+    const dataToSave = {
+      messages,
+      status: status || 'open',
+    };
+    localStorage.setItem(key, JSON.stringify(dataToSave));
   } catch (error) {
     console.error('Failed to save chat history to localStorage:', error);
   }
@@ -28,17 +36,25 @@ export function saveChatHistory(sessionId: string, messages: RagResponse[]): voi
 /**
  * チャット履歴を読み込み
  */
-export function loadChatHistory(sessionId: string): RagResponse[] {
+export function loadChatHistory(sessionId: string): {
+  messages: RagResponse[];
+  status: 'open' | 'closed';
+} {
   try {
     const key = getStorageKey(sessionId);
     const data = localStorage.getItem(key);
     if (!data) {
-      return [];
+      return { messages: [], status: 'open' };
     }
-    return JSON.parse(data) as RagResponse[];
+    const parsed = JSON.parse(data);
+    // 後方互換性: 配列形式の場合は古いフォーマット
+    if (Array.isArray(parsed)) {
+      return { messages: parsed as RagResponse[], status: 'open' };
+    }
+    return parsed as { messages: RagResponse[]; status: 'open' | 'closed' };
   } catch (error) {
     console.error('Failed to load chat history from localStorage:', error);
-    return [];
+    return { messages: [], status: 'open' };
   }
 }
 

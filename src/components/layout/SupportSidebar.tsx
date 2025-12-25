@@ -1,7 +1,15 @@
 'use client';
 
+import { useUserContext } from '@/contexts';
+import type {
+  ChatMessage,
+  GetMannedCounterRequest,
+  GetMannedCounterResponse,
+  MannedCounterDetail,
+  SendMailRequest,
+  SendMailResponse,
+} from '@/lib/api';
 import {
-  ArrowBack as ArrowBackIcon,
   CheckCircleOutline as CheckCircleIcon,
   ChevronLeft as ChevronLeftIcon,
   Close as CloseIcon,
@@ -10,10 +18,12 @@ import {
   WarningAmberOutlined as WarningIcon,
 } from '@mui/icons-material';
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Drawer,
   IconButton,
   Step,
@@ -22,23 +32,13 @@ import {
   TextField,
   Tooltip,
   Typography,
-  CircularProgress,
-  Alert,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
-import type {
-  ChatMessage,
-  SendMailRequest,
-  SendMailResponse,
-  MannedCounterDetail,
-  GetMannedCounterRequest,
-  GetMannedCounterResponse,
-} from '@/lib/api';
-import { useUserContext } from '@/contexts';
+import { useEffect, useState } from 'react';
 
 interface SupportSidebarProps {
   open: boolean;
   onClose: () => void;
+  onComplete: () => void;
   priorityMannedCounterNames: string[];
   chatHistory: ChatMessage[];
   businessSubCategories: string[];
@@ -56,12 +56,15 @@ const steps = ['入力', '確認', '完了'];
 export default function SupportSidebar({
   open,
   onClose,
+  onComplete,
   priorityMannedCounterNames,
   chatHistory,
   businessSubCategories,
 }: SupportSidebarProps) {
   const { user, employeeInfo } = useUserContext();
-  const [mannedCounterInfo, setMannedCounterInfo] = useState<MannedCounterDetail[]>([]);
+  const [mannedCounterInfo, setMannedCounterInfo] = useState<
+    MannedCounterDetail[]
+  >([]);
   const [isLoadingCounters, setIsLoadingCounters] = useState(false);
   const [selectedContact, setSelectedContact] =
     useState<MannedCounterDetail | null>(null);
@@ -107,7 +110,9 @@ export default function SupportSidebar({
       } catch (err) {
         console.error('Error fetching manned counters:', err);
         setError(
-          err instanceof Error ? err.message : '有人窓口情報の取得に失敗しました'
+          err instanceof Error
+            ? err.message
+            : '有人窓口情報の取得に失敗しました'
         );
       } finally {
         setIsLoadingCounters(false);
@@ -174,7 +179,10 @@ export default function SupportSidebar({
     try {
       // チャット履歴をメール本文に整形
       const chatHistoryText = chatHistory
-        .map(msg => `[${msg.role === 'user' ? 'ユーザー' : 'アシスタント'}]\n${msg.content}`)
+        .map(
+          msg =>
+            `[${msg.role === 'user' ? 'ユーザー' : 'アシスタント'}]\n${msg.content}`
+        )
         .join('\n\n');
 
       const mailContent = `【お問い合わせ内容】\n${formData.message}\n\n【チャット履歴】\n${chatHistoryText}`;
@@ -205,10 +213,13 @@ export default function SupportSidebar({
       const result = (await response.json()) as SendMailResponse;
       setSentText(result.sent_text);
       handleNext();
+      onComplete();
     } catch (err) {
       console.error('Error sending mail:', err);
       setError(
-        err instanceof Error ? err.message : 'メール送信中にエラーが発生しました'
+        err instanceof Error
+          ? err.message
+          : 'メール送信中にエラーが発生しました'
       );
     } finally {
       setIsSubmitting(false);
@@ -291,9 +302,7 @@ export default function SupportSidebar({
                   <CircularProgress />
                 </Box>
               ) : mannedCounterInfo.length === 0 ? (
-                <Alert severity="info">
-                  利用可能な有人窓口がありません。
-                </Alert>
+                <Alert severity="info">利用可能な有人窓口がありません。</Alert>
               ) : (
                 mannedCounterInfo.map((contact, index) => (
                   <Card
@@ -506,7 +515,10 @@ export default function SupportSidebar({
           >
             {activeStep === 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Button startIcon={<ChevronLeftIcon />} onClick={handleBackToList}>
+                <Button
+                  startIcon={<ChevronLeftIcon />}
+                  onClick={handleBackToList}
+                >
                   戻る
                 </Button>
                 <Button

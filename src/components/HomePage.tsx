@@ -30,9 +30,11 @@ export default function HomePage() {
     loading,
     error,
     lastUserMessage,
+    status,
     sendMessage,
     resetSession,
     loadSession,
+    closeChat,
   } = useRagChat();
 
   // 利用規約の同意状態をチェック
@@ -110,6 +112,12 @@ export default function HomePage() {
     setSupportSidebarOpen(true);
   };
 
+  // 有人窓口への問い合わせ完了時の処理
+  const handleSupportComplete = () => {
+    closeChat();
+    setSupportSidebarOpen(false);
+  };
+
   // 利用規約同意状態変更ハンドラー
   const handleTermsAgreeChange = (agreed: boolean) => {
     if (agreed) {
@@ -182,6 +190,7 @@ export default function HomePage() {
         <SupportSidebar
           open={supportSidebarOpen}
           onClose={() => setSupportSidebarOpen(false)}
+          onComplete={handleSupportComplete}
           priorityMannedCounterNames={priorityMannedCounterNames}
           chatHistory={chatHistory}
           businessSubCategories={businessSubCategories}
@@ -280,6 +289,7 @@ export default function HomePage() {
                   loading={loading}
                   error={error}
                   lastUserMessage={lastUserMessage}
+                  chatClosed={status === 'closed'}
                 />
 
                 {/* チャット入力エリア（下部固定） */}
@@ -288,7 +298,7 @@ export default function HomePage() {
                     onSend={handleChatSend}
                     value={chatInputValue}
                     onChange={setChatInputValue}
-                    disabled={loading}
+                    disabled={loading || status === 'closed'}
                     loading={loading}
                   />
                 </Box>

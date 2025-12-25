@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, Typography, Alert, Skeleton, Paper } from '@mui/material';
-import { useEffect, useRef } from 'react';
 import type { RagResponse } from '@/lib/api';
+import { Alert, Box, Paper, Skeleton, Typography } from '@mui/material';
+import { useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
 
 interface ChatHistoryProps {
@@ -10,12 +10,19 @@ interface ChatHistoryProps {
   loading?: boolean;
   error?: string | null;
   lastUserMessage?: string | null;
+  chatClosed?: boolean;
 }
 
 /**
  * チャット履歴表示コンポーネント
  */
-export default function ChatHistory({ messages, loading, error, lastUserMessage }: ChatHistoryProps) {
+export default function ChatHistory({
+  messages,
+  loading,
+  error,
+  lastUserMessage,
+  chatClosed,
+}: ChatHistoryProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // 新しいメッセージが追加されたら自動スクロール
@@ -63,11 +70,38 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
         <ChatMessage key={index} response={message} />
       ))}
 
+      {/* チャット終了メッセージ */}
+      {chatClosed && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            my: 3,
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
+            有人窓口へのお問い合わせを送信したため、チャットを終了しました。
+          </Typography>
+        </Box>
+      )}
+
       {/* ローディング表示（スケルトン） */}
       {loading && lastUserMessage && (
         <Box sx={{ mb: 4 }}>
           {/* ユーザーメッセージ */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              mb: 2,
+            }}
+          >
             <Paper
               elevation={1}
               sx={{
@@ -80,7 +114,10 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
             >
               <Typography variant="body1">{lastUserMessage}</Typography>
             </Paper>
-            <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: 'text.secondary', mt: 0.5 }}
+            >
               {new Date().toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -102,19 +139,40 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
             >
               {/* 業務小分類タグのスケルトン */}
               <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
-                <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: 1 }} />
-                <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: 1 }} />
+                <Skeleton
+                  variant="rectangular"
+                  width={60}
+                  height={24}
+                  sx={{ borderRadius: 1 }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  width={60}
+                  height={24}
+                  sx={{ borderRadius: 1 }}
+                />
               </Box>
 
               {/* FAQ回答セクションのスケルトン */}
               <Box sx={{ mb: 3 }}>
-                <Skeleton variant="text" width={100} height={24} sx={{ mb: 1 }} />
+                <Skeleton
+                  variant="text"
+                  width={100}
+                  height={24}
+                  sx={{ mb: 1 }}
+                />
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 1.5, bgcolor: 'action.hover' }}
+                  >
                     <Skeleton variant="text" width="90%" />
                     <Skeleton variant="text" width="80%" />
                   </Paper>
-                  <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 1.5, bgcolor: 'action.hover' }}
+                  >
                     <Skeleton variant="text" width="85%" />
                     <Skeleton variant="text" width="75%" />
                   </Paper>
@@ -123,7 +181,12 @@ export default function ChatHistory({ messages, loading, error, lastUserMessage 
 
               {/* RAG回答セクションのスケルトン */}
               <Box>
-                <Skeleton variant="text" width={100} height={24} sx={{ mb: 1 }} />
+                <Skeleton
+                  variant="text"
+                  width={100}
+                  height={24}
+                  sx={{ mb: 1 }}
+                />
                 <Skeleton variant="text" width="95%" />
                 <Skeleton variant="text" width="100%" />
                 <Skeleton variant="text" width="90%" />
