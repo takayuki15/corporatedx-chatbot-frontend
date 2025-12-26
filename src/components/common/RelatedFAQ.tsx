@@ -60,18 +60,70 @@ export default function RelatedFAQ({
   };
 
   /**
-   * 回答テキスト内のurltextをパースしてReact要素に変換
-   * 形式: {{ urltext("テキスト", "URL") }}
+   * 回答テキスト内のurltextと直接URLをパースしてReact要素に変換
+   * 形式1: {{ urltext("テキスト", "URL") }}
+   * 形式2: http://... または https://... (直接URL) → 「リンク」と表示
    */
   const parseAnswerWithLinks = (answer: string): React.ReactNode[] => {
     const urltextPattern =
       /\{\{\s*urltext\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)\s*\}\}/g;
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+
+    // 全てのパターンをマッチして位置順にソート
+    const matches: Array<{
+      index: number;
+      length: number;
+      type: 'urltext' | 'url';
+      text?: string;
+      url: string;
+    }> = [];
+
+    // urltextパターンのマッチ
+    let urltextMatch: RegExpExecArray | null;
+    while ((urltextMatch = urltextPattern.exec(answer)) !== null) {
+      matches.push({
+        index: urltextMatch.index,
+        length: urltextMatch[0].length,
+        type: 'urltext',
+        text: urltextMatch[1],
+        url: urltextMatch[2],
+      });
+    }
+
+    // 直接URLパターンのマッチ（urltextの中のURLは除外）
+    let urlMatch: RegExpExecArray | null;
+    while ((urlMatch = urlPattern.exec(answer)) !== null) {
+      // このURLがurltextの中に含まれているかチェック
+      const isInsideUrltext = matches.some(
+        m =>
+          m.type === 'urltext' &&
+          urlMatch!.index >= m.index &&
+          urlMatch!.index < m.index + m.length
+      );
+
+      if (!isInsideUrltext) {
+        matches.push({
+          index: urlMatch.index,
+          length: urlMatch[0].length,
+          type: 'url',
+          url: urlMatch[1],
+        });
+      }
+    }
+
+    // 位置順にソート
+    matches.sort((a, b) => a.index - b.index);
+
+    // マッチがない場合は元のテキストをそのまま返す
+    if (matches.length === 0) {
+      return [answer];
+    }
+
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
-    let match;
 
-    while ((match = urltextPattern.exec(answer)) !== null) {
-      // urltextの前のテキストを追加
+    matches.forEach((match, idx) => {
+      // マッチの前のテキストを追加
       if (match.index > lastIndex) {
         const textBefore = answer.substring(lastIndex, match.index);
         if (textBefore) {
@@ -80,12 +132,11 @@ export default function RelatedFAQ({
       }
 
       // リンクを追加
-      const linkText = match[1];
-      const linkUrl = match[2];
+      const linkText = match.type === 'urltext' ? match.text! : 'リンク';
       parts.push(
         <Link
-          key={`link-${match.index}`}
-          href={linkUrl}
+          key={`link-${match.index}-${idx}`}
+          href={match.url}
           target="_blank"
           rel="noopener noreferrer"
           sx={{ color: 'primary.main' }}
@@ -94,8 +145,8 @@ export default function RelatedFAQ({
         </Link>
       );
 
-      lastIndex = urltextPattern.lastIndex;
-    }
+      lastIndex = match.index + match.length;
+    });
 
     // 残りのテキストを追加
     if (lastIndex < answer.length) {
@@ -103,11 +154,6 @@ export default function RelatedFAQ({
       if (remainingText) {
         parts.push(remainingText);
       }
-    }
-
-    // urltextが見つからない場合は元のテキストをそのまま返す
-    if (parts.length === 0) {
-      return [answer];
     }
 
     return parts;
