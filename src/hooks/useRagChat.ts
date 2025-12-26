@@ -74,10 +74,11 @@ export function useRagChat() {
 
         const data: RagResponse = await response.json();
 
-        // フロントエンド側でユーザーの質問文を追加
+        // フロントエンド側でユーザーの質問文とタイムスタンプを追加
         const dataWithUserQuery = {
           ...data,
           userQuery: query,
+          timestamp: new Date().toISOString(),
         };
 
         const updatedMessages = [...state.messages, dataWithUserQuery];

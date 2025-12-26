@@ -141,6 +141,38 @@ function FeedbackButtons() {
 }
 
 /**
+ * タイムスタンプをフォーマット
+ * 本日: 時間のみ (HH:MM)
+ * 昨日以前: 日付と時間 (M/D HH:MM)
+ */
+function formatTimestamp(timestamp?: string): string {
+  const messageDate = timestamp ? new Date(timestamp) : new Date();
+  const today = new Date();
+
+  // 本日かどうかを判定（年月日が一致）
+  const isToday =
+    messageDate.getFullYear() === today.getFullYear() &&
+    messageDate.getMonth() === today.getMonth() &&
+    messageDate.getDate() === today.getDate();
+
+  if (isToday) {
+    // 本日: 時間のみ表示
+    return messageDate.toLocaleTimeString('ja-JP', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } else {
+    // 昨日以前: 日付と時間を表示
+    return messageDate.toLocaleString('ja-JP', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+}
+
+/**
  * チャットメッセージ表示コンポーネント
  * RAGレスポンスの各パターンに対応した表示を行う
  */
@@ -151,11 +183,8 @@ export default function ChatMessage({ response }: ChatMessageProps) {
     response.userQuery ||
     response.chat_history.filter(msg => msg.role === 'user').pop()?.content;
 
-  // 投稿時間を現在時刻で表示（TODO: メッセージごとのタイムスタンプを追加）
-  const timestamp = new Date().toLocaleTimeString('ja-JP', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  // タイムスタンプをフォーマット
+  const timestamp = formatTimestamp(response.timestamp);
 
   // パターン1: インデックス不在
   const isNoIndexAvailable =

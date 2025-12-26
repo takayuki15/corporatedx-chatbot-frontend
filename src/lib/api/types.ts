@@ -161,6 +161,7 @@ interface RagResponseBase {
   business_sub_categories: string[];
   priority_manned_counter_names: string[];
   userQuery?: string; // フロントエンド側で追加するユーザーの質問文
+  timestamp?: string; // フロントエンド側で追加するメッセージのタイムスタンプ (ISO 8601形式)
   status?: 'open' | 'closed'; // チャットの状態（closed: 有人窓口への問い合わせ完了）
 }
 
