@@ -74,11 +74,19 @@ export function useRagChat() {
 
         const data: RagResponse = await response.json();
 
-        // フロントエンド側でユーザーの質問文とタイムスタンプを追加
+        // 現在時刻とUUIDでconversation_timeを生成
+        const now = new Date();
+        const jstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC to JST
+        const formattedTime = jstTime.toISOString().replace('Z', '+09:00');
+        const uuid = crypto.randomUUID();
+        const conversationTime = `${formattedTime}_${uuid}`;
+
+        // フロントエンド側でユーザーの質問文、タイムスタンプ、conversation_timeを追加
         const dataWithUserQuery = {
           ...data,
           userQuery: query,
           timestamp: new Date().toISOString(),
+          conversation_time: conversationTime,
         };
 
         const updatedMessages = [...state.messages, dataWithUserQuery];
@@ -161,14 +169,37 @@ export function useRagChat() {
    */
   const loadSession = useCallback((sessionId: string) => {
     const { messages: savedMessages, status } = loadChatHistory(sessionId);
+
+    // conversation_timeがないメッセージに追加
+    const messagesWithConversationTime = savedMessages.map((msg, index) => {
+      if (!msg.conversation_time) {
+        // 既存のtimestampを使用するか、なければ現在時刻を使用
+        const timestamp = msg.timestamp || new Date().toISOString();
+        const date = new Date(timestamp);
+        const jstTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        const formattedTime = jstTime.toISOString().replace('Z', '+09:00');
+        const uuid = crypto.randomUUID();
+        return {
+          ...msg,
+          conversation_time: `${formattedTime}_${uuid}`,
+        };
+      }
+      return msg;
+    });
+
     setState({
-      messages: savedMessages,
+      messages: messagesWithConversationTime,
       loading: false,
       error: null,
       sessionId: sessionId,
       lastUserMessage: null,
       status: status,
     });
+
+    // conversation_timeを追加したメッセージを保存
+    if (messagesWithConversationTime.some((msg, i) => msg.conversation_time !== savedMessages[i]?.conversation_time)) {
+      saveChatHistory(sessionId, messagesWithConversationTime, status);
+    }
   }, []);
 
   /**

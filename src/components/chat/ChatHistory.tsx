@@ -67,7 +67,7 @@ export default function ChatHistory({
 
       {/* メッセージ履歴 */}
       {messages.map((message, index) => (
-        <ChatMessage key={index} response={message} />
+        <ChatMessage key={index} response={message} allMessages={messages} />
       ))}
 
       {/* チャット終了メッセージ */}

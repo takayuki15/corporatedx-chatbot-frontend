@@ -2,13 +2,16 @@
 
 import RelatedFAQ from '@/components/common/RelatedFAQ';
 import type { RagResponse } from '@/lib/api';
+import { saveChatHistory } from '@/lib/storage';
 import { ThumbDownOutlined, ThumbUpOutlined } from '@mui/icons-material';
 import { Box, IconButton, Paper, Typography } from '@mui/material';
+import { useState } from 'react';
 import type { Citation } from './CitationPopover';
 import CitationText from './CitationText';
 
 interface ChatMessageProps {
   response: RagResponse;
+  allMessages?: RagResponse[];
 }
 
 /**
@@ -95,15 +98,124 @@ function RagAnswerWithCitations({
 /**
  * AI回答のフィードバックボタン
  */
-function FeedbackButtons() {
-  const handleGoodClick = () => {
-    // TODO: フィードバックAPIを実装後、Good評価を送信
-    console.log('Good feedback clicked');
+function FeedbackButtons({
+  sessionId,
+  conversationTime,
+  initialFeedback,
+  onFeedbackChange,
+}: {
+  sessionId: string;
+  conversationTime?: string;
+  initialFeedback?: 'good' | 'bad';
+  onFeedbackChange?: (feedback: 'good' | 'bad' | undefined) => void;
+}) {
+  const [selectedFeedback, setSelectedFeedback] = useState<
+    'good' | 'bad' | null
+  >(initialFeedback || null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleGoodClick = async () => {
+    if (isSubmitting || !conversationTime) return;
+
+    setIsSubmitting(true);
+    try {
+      // 既に選択されている場合は削除
+      if (selectedFeedback === 'good') {
+        const response = await fetch('/chatbot/api/delete-feedback/', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            conversation_time: conversationTime,
+          }),
+        });
+
+        if (response.ok) {
+          setSelectedFeedback(null);
+          onFeedbackChange?.(undefined);
+        } else {
+          console.error('Failed to delete feedback');
+        }
+      } else {
+        // 新規に選択
+        const response = await fetch('/chatbot/api/submit-feedback/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            conversation_time: conversationTime,
+            feedback: 'good',
+          }),
+        });
+
+        if (response.ok) {
+          setSelectedFeedback('good');
+          onFeedbackChange?.('good');
+        } else {
+          console.error('Failed to submit good feedback');
+        }
+      }
+    } catch (error) {
+      console.error('Error handling good feedback:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleBadClick = () => {
-    // TODO: フィードバックAPIを実装後、Bad評価を送信
-    console.log('Bad feedback clicked');
+  const handleBadClick = async () => {
+    if (isSubmitting || !conversationTime) return;
+
+    setIsSubmitting(true);
+    try {
+      // 既に選択されている場合は削除
+      if (selectedFeedback === 'bad') {
+        const response = await fetch('/chatbot/api/delete-feedback/', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            conversation_time: conversationTime,
+          }),
+        });
+
+        if (response.ok) {
+          setSelectedFeedback(null);
+          onFeedbackChange?.(undefined);
+        } else {
+          console.error('Failed to delete feedback');
+        }
+      } else {
+        // 新規に選択
+        const response = await fetch('/chatbot/api/submit-feedback/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            conversation_time: conversationTime,
+            feedback: 'bad',
+          }),
+        });
+
+        if (response.ok) {
+          setSelectedFeedback('bad');
+          onFeedbackChange?.('bad');
+        } else {
+          console.error('Failed to submit bad feedback');
+        }
+      }
+    } catch (error) {
+      console.error('Error handling bad feedback:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -111,11 +223,21 @@ function FeedbackButtons() {
       <IconButton
         size="small"
         onClick={handleGoodClick}
+        disabled={isSubmitting || (selectedFeedback !== null && selectedFeedback !== 'good')}
         sx={{
-          color: 'text.secondary',
+          color:
+            selectedFeedback === 'good' ? 'success.main' : 'text.secondary',
+          bgcolor:
+            selectedFeedback === 'good' ? 'success.lighter' : 'transparent',
           '&:hover': {
             color: 'success.main',
             bgcolor: 'success.lighter',
+          },
+          '&.Mui-disabled': {
+            color:
+              selectedFeedback === 'good' ? 'success.main' : 'text.secondary',
+            bgcolor:
+              selectedFeedback === 'good' ? 'success.lighter' : 'transparent',
           },
         }}
         aria-label="Good feedback"
@@ -125,11 +247,18 @@ function FeedbackButtons() {
       <IconButton
         size="small"
         onClick={handleBadClick}
+        disabled={isSubmitting || (selectedFeedback !== null && selectedFeedback !== 'bad')}
         sx={{
-          color: 'text.secondary',
+          color: selectedFeedback === 'bad' ? 'error.main' : 'text.secondary',
+          bgcolor: selectedFeedback === 'bad' ? 'error.lighter' : 'transparent',
           '&:hover': {
             color: 'error.main',
             bgcolor: 'error.lighter',
+          },
+          '&.Mui-disabled': {
+            color: selectedFeedback === 'bad' ? 'error.main' : 'text.secondary',
+            bgcolor:
+              selectedFeedback === 'bad' ? 'error.lighter' : 'transparent',
           },
         }}
         aria-label="Bad feedback"
@@ -176,7 +305,22 @@ function formatTimestamp(timestamp?: string): string {
  * チャットメッセージ表示コンポーネント
  * RAGレスポンスの各パターンに対応した表示を行う
  */
-export default function ChatMessage({ response }: ChatMessageProps) {
+export default function ChatMessage({
+  response,
+  allMessages,
+}: ChatMessageProps) {
+  // conversation_timeがない場合は生成
+  const conversationTime =
+    response.conversation_time ||
+    (() => {
+      const timestamp = response.timestamp || new Date().toISOString();
+      const date = new Date(timestamp);
+      const jstTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      const formattedTime = jstTime.toISOString().replace('Z', '+09:00');
+      const uuid = crypto.randomUUID();
+      return `${formattedTime}_${uuid}`;
+    })();
+
   // ユーザーメッセージを取得
   // フロントエンド側で追加したuserQueryを優先、なければchat_historyから取得
   const userMessage =
@@ -185,6 +329,31 @@ export default function ChatMessage({ response }: ChatMessageProps) {
 
   // タイムスタンプをフォーマット
   const timestamp = formatTimestamp(response.timestamp);
+
+  // フィードバック変更時のハンドラー
+  const handleFeedbackChange = (feedback: 'good' | 'bad' | undefined) => {
+    if (!allMessages) return;
+
+    // 現在のメッセージのインデックスを見つける
+    const messageIndex = allMessages.findIndex(
+      msg =>
+        (msg.conversation_time || msg.timestamp) ===
+        (conversationTime || response.timestamp)
+    );
+
+    if (messageIndex === -1) return;
+
+    // メッセージのフィードバックを更新
+    const updatedMessages = [...allMessages];
+    updatedMessages[messageIndex] = {
+      ...updatedMessages[messageIndex],
+      conversation_time: conversationTime,
+      feedback,
+    };
+
+    // localStorageに保存
+    saveChatHistory(response.session_id, updatedMessages, response.status);
+  };
 
   // パターン1: インデックス不在
   const isNoIndexAvailable =
@@ -262,6 +431,12 @@ export default function ChatMessage({ response }: ChatMessageProps) {
               <Typography variant="body2" sx={{ mt: 2 }}>
                 解決できない場合は、もう少し具体的に質問するとより適切に回答できるかもしれません。
               </Typography>
+              <FeedbackButtons
+                sessionId={response.session_id}
+                conversationTime={conversationTime}
+                initialFeedback={response.feedback}
+                onFeedbackChange={handleFeedbackChange}
+              />
             </>
           )}
 
@@ -276,7 +451,12 @@ export default function ChatMessage({ response }: ChatMessageProps) {
               <Typography variant="body2" sx={{ mt: 2 }}>
                 解決できない場合は、もう少し具体的に質問するとより適切に回答できるかもしれません。
               </Typography>
-              <FeedbackButtons />
+              <FeedbackButtons
+                sessionId={response.session_id}
+                conversationTime={conversationTime}
+                initialFeedback={response.feedback}
+                onFeedbackChange={handleFeedbackChange}
+              />
             </Box>
           )}
 
@@ -304,7 +484,12 @@ export default function ChatMessage({ response }: ChatMessageProps) {
               <Typography variant="body2" sx={{ mt: 2 }}>
                 解決できない場合は、もう少し具体的に質問するとより適切に回答できるかもしれません。
               </Typography>
-              <FeedbackButtons />
+              <FeedbackButtons
+                sessionId={response.session_id}
+                conversationTime={conversationTime}
+                initialFeedback={response.feedback}
+                onFeedbackChange={handleFeedbackChange}
+              />
             </Box>
           )}
         </Paper>

@@ -162,7 +162,9 @@ interface RagResponseBase {
   priority_manned_counter_names: string[];
   userQuery?: string; // フロントエンド側で追加するユーザーの質問文
   timestamp?: string; // フロントエンド側で追加するメッセージのタイムスタンプ (ISO 8601形式)
+  conversation_time?: string; // フロントエンド側で追加する会話時刻 (日本時刻JST + UUID形式)
   status?: 'open' | 'closed'; // チャットの状態（closed: 有人窓口への問い合わせ完了）
+  feedback?: 'good' | 'bad'; // フロントエンド側で追加するフィードバック状態
 }
 
 /**
@@ -317,4 +319,64 @@ export interface ChunkHighlighterResponse {
 export interface ChunkHighlighterApiResponse {
   statusCode: number;
   body: string; // JSON文字列: {"s3_path": [...], "html": [...]}
+}
+
+/**
+ * フィードバック送信API関連の型定義
+ */
+
+/**
+ * フィードバック送信リクエスト
+ */
+export interface SubmitFeedbackRequest {
+  session_id: string;
+  conversation_time: string;
+  feedback: 'good' | 'bad';
+  feedback_reason?: string;
+}
+
+/**
+ * フィードバック送信レスポンス
+ */
+export interface SubmitFeedbackResponse {
+  message: string;
+  session_id: string;
+  conversation_time: string;
+}
+
+/**
+ * フィードバック送信APIの生レスポンス（bodyがJSON文字列の場合）
+ */
+export interface SubmitFeedbackApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列: {"message": "...", "session_id": "...", "conversation_time": "..."}
+}
+
+/**
+ * フィードバック削除API関連の型定義
+ */
+
+/**
+ * フィードバック削除リクエスト
+ */
+export interface DeleteFeedbackRequest {
+  session_id: string;
+  conversation_time: string;
+}
+
+/**
+ * フィードバック削除レスポンス
+ */
+export interface DeleteFeedbackResponse {
+  message: string;
+  session_id: string;
+  conversation_time: string;
+}
+
+/**
+ * フィードバック削除APIの生レスポンス（bodyがJSON文字列の場合）
+ */
+export interface DeleteFeedbackApiResponse {
+  statusCode: number;
+  body: string; // JSON文字列: {"message": "...", "session_id": "...", "conversation_time": "..."}
 }

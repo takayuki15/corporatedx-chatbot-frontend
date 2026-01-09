@@ -10,6 +10,9 @@ export type {
   ChunkHighlighterApiResponse,
   ChunkHighlighterRequest,
   ChunkHighlighterResponse,
+  DeleteFeedbackApiResponse,
+  DeleteFeedbackRequest,
+  DeleteFeedbackResponse,
   Employee,
   EmployeeApiResponse,
   EmployeeResponse,
@@ -33,5 +36,8 @@ export type {
   SendMailApiResponse,
   SendMailRequest,
   SendMailResponse,
+  SubmitFeedbackApiResponse,
+  SubmitFeedbackRequest,
+  SubmitFeedbackResponse,
   User,
 } from './types';
