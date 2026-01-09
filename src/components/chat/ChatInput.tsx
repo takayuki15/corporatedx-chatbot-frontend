@@ -1,7 +1,7 @@
 'use client';
 
 import { Send } from '@mui/icons-material';
-import { Box, IconButton, TextField, styled } from '@mui/material';
+import { Box, IconButton, TextField, Tooltip, styled } from '@mui/material';
 import { KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
 interface ChatInputProps {
@@ -141,21 +141,28 @@ export default function ChatInput({
             }}
           >
             {/* 送信ボタン */}
-            <IconButton
-              onClick={handleSend}
-              disabled={!canSend}
-              aria-label="メッセージを送信"
-              size="small"
-              sx={{
-                color: 'action.active',
-                '&.Mui-disabled': {
-                  color: 'action.active',
-                  opacity: 1,
-                },
-              }}
-            >
-              <Send />
-            </IconButton>
+            <Tooltip title="送信" arrow placement="top">
+              <span>
+                <IconButton
+                  onClick={handleSend}
+                  disabled={!canSend}
+                  aria-label="メッセージを送信"
+                  size="small"
+                  sx={{
+                    color: 'action.active',
+                    '&:hover:not(.Mui-disabled)': {
+                      color: '#6E41FF',
+                    },
+                    '&.Mui-disabled': {
+                      color: 'action.active',
+                      opacity: 1,
+                    },
+                  }}
+                >
+                  <Send />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Box>
         </InputContainer>
       </StyledContainer>
